@@ -1,0 +1,140 @@
+@use "../abstract" as *;
+/*----------------------------------------
+	hero item
+----------------------------------------*/
+
+.manez-sidebar {
+	position: fixed;
+	inset-inline-start: 0;
+	top: 0;
+	height: 100%;
+	width: 260px;
+	background-color: var(--clr-common-white);
+	z-index: 99;
+	transition: all 0.5s ease;
+	background-repeat: no-repeat;
+	background-size: cover;
+	background-position: top center;
+	padding-bottom: 110px;
+
+	&.collapsed {
+		inset-inline-start: -300px;
+	}
+
+	@media #{$xs,$sm,$md} {
+		inset-inline-start: -300px;
+	}
+
+	.logo__white {
+		opacity: 0;
+		visibility: hidden;
+		width: 100%;
+	}
+
+	&.open {
+		inset-inline-start: 0;
+	}
+
+	.logo-details {
+		@include flexbox();
+		align-items: center;
+		position: relative;
+		justify-content: center;
+		height: 70px;
+		margin: 0 auto;
+	}
+}
+
+.sidebar-logo-wrap {
+	border-bottom: 1px solid var(--clr-border-1);
+	border-right: 1px solid var(--clr-border-1);
+}
+
+.manez-sidebar-nav {
+	padding: 0 14px;
+
+	ul {
+		li {
+			list-style: none;
+
+			&:not(:last-child) {
+				margin-bottom: 15px;
+			}
+
+			a {
+				font-size: 16px;
+				display: inline-flex;
+				text-align: start;
+				align-items: center;
+				justify-content: start;
+				font-weight: 500;
+				width: 100%;
+				height: 36px;
+				padding: 0 20px;
+				background-color: transparent;
+				color: var(--clr-text-body);
+				transition: all 0.3s ease-in-out;
+				gap: 0 10px;
+
+				&.active {
+					color: var(--clr-theme-primary);
+					background-color: rgba(184, 184, 184, 0.05);
+				}
+
+				span {
+					font-size: 18px;
+				}
+			}
+
+			&:hover>a {
+				color: var(--clr-theme-primary);
+				background-color: rgba(184, 184, 184, 0.05);
+			}
+		}
+	}
+}
+
+.manez-sidebar-inner {
+	margin-top: 20px;
+}
+
+.app-offcanvas-overlay {
+	&.overlay-open {
+		@media (max-width: 992px) {
+			background-color: rgba(0, 0, 0, 0.6);
+			position: fixed;
+			top: 0px;
+			left: 0px;
+			right: 0px;
+			bottom: 0px;
+			z-index: 10;
+		}
+	}
+}
+
+.app-page-body {
+	position: absolute;
+	inset-inline-end: 0;
+	width: calc(100% - 260px);
+	transition: all 0.5s ease;
+	top: 0;
+
+	&.collapsed {
+		width: 100%;
+	}
+
+	@media #{$xs,$sm,$md} {
+		width: 100%;
+	}
+}
+
+.app-content-wrapper {
+	padding: 100px 30px 60px 30px;
+	position: relative;
+	min-height: 927px;
+}
+
+.subtitle {
+	margin-bottom: 10px;
+	display: block;
+}

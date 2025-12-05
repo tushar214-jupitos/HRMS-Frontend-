@@ -1,0 +1,102 @@
+@use "../abstract" as *;
+/*----------------------------------------
+	header css
+----------------------------------------*/
+
+.bd-header-list {
+  ul {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    justify-content: end;
+
+    li {
+      list-style: none;
+
+      a {
+        color: var(--clr-common-black);
+        transition: all 0.3s linear;
+
+        &:hover {
+          color: var(--clr-theme-primary);
+        }
+      }
+      &:nth-child(2) {
+        @media #{$xs} {
+          display: none;
+        }
+      }
+      &:nth-child(3) {
+        @media #{$xxs} {
+          display: none;
+        }
+      }
+    }
+  }
+}
+.app-header {
+  background-color: var(--clr-common-white);
+  position: fixed;
+  width: calc(100% - 260px);
+  transition: 0.5s;
+  top: 0;
+  z-index: 999;
+  right: 0;
+
+  &.collapsed {
+    width: 100%;
+  }
+
+  @media #{$xs,$sm,$md} {
+    width: 100%;
+  }
+
+  &-inner {
+    @include flexbox();
+    justify-content: space-between;
+    padding: 13px 30px;
+    transition: 0.3s;
+    height: 70px;
+    align-items: center;
+    column-gap: 20px;
+    background-color: var(--clr-common-white);
+  }
+
+}
+.bar {
+  &-icon {
+    width: 20px;
+    height: 18px;
+    @include flexbox();
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    cursor: pointer;
+
+    span {
+      width: 100%;
+      height: 2px;
+      background: var(--clr-text-body);
+      display: inline-block;
+
+      &:nth-child(2) {
+        margin-inline-start: -10px;
+        transition: all 0.3s ease-in-out;
+      }
+    }
+
+    &:hover {
+      span {
+        &:nth-child(2) {
+          margin-inline-start: 0;
+        }
+      }
+    }
+  }
+}
+.manez-toggle-btn {
+  display: none;
+  @media #{$md,$sm,$xs} {
+    display: block;
+  }
+}

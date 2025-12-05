@@ -1,0 +1,284 @@
+/*----------------------------------------
+    01. common css
+----------------------------------------*/
+@use "../abstract" as *;
+
+/*-----------------------------------------------------------------------------------
+
+    Theme Name: Manez - HRM & CRM HTML5 Dashboard Template
+    Author: Bdevs
+    Support: https://support.bdevs.net
+    Description: Manez - HRM & CRM HTML5 Dashboard Template
+    Version: 1.0.0
+	  Developer: @mazharulislamt2
+
+-----------------------------------------------------------------------------------
+*/
+
+@import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap");
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+}
+
+html {
+  font-size: 10px;
+}
+body {
+  font-family: var(--bd-ff-body);
+  font-size: 16px;
+  font-weight: normal;
+  color: var(--clr-text-body);
+  line-height: 28px;
+  background: var(--clr-bg-body);
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-family: var(--bd-ff-heading);
+	color: var(--clr-heading-primary);
+	font-weight: 700;
+	margin-top: 0px;
+	line-height: 1;
+	margin-bottom: 0;
+}
+
+h1 {
+	font-size: 42px;
+	@media #{$xs} {
+		font-size: 22px;
+	}
+}
+
+h2 {
+	font-size: 34px;
+	@media #{$xl} {
+		font-size: 20px;
+	}
+	@media #{$lg} {
+		font-size: 18px;
+	}
+	@media #{$md,$sm,$xs} {
+		font-size: 16px;
+	}
+}
+
+h3 {
+	font-size: 30px;
+}
+
+h4 {
+	font-size: 24px;
+}
+
+h5 {
+	font-size: 20px;
+
+	&.small {
+		font-size: 15px;
+	}
+}
+
+h6 {
+	font-size: 16px;
+	&.large {
+		font-size: 16px;
+	}
+	&.small {
+		font-size: 13px;
+	}
+}
+main {
+  overflow: hidden;
+}
+section {
+  position: relative;
+  z-index: 2;
+}
+a {
+  text-decoration: none;
+}
+img {
+  max-width: 100%;
+  object-fit: cover;
+}
+
+a:focus,
+.button:focus {
+  text-decoration: none;
+  outline: none;
+}
+b,
+strong {
+  font-weight: bolder;
+  color: var(--clr-common-black);
+}
+a,
+button {
+  color: var(--clr-theme-primary);
+
+  &:hover {
+    color: var(--clr-common-black);
+  }
+  outline: none;
+  border: none;
+  background: transparent;
+}
+button:hover {
+  cursor: pointer;
+}
+button:focus {
+  outline: 0;
+  border: 0;
+}
+ul {
+  margin: 0;
+  padding: 0;
+}
+p {
+  font-family: var(--bd-ff-body);
+  font-size: 18px;
+  font-weight: normal;
+  color: var(--clr-text-body);
+  margin-bottom: 15px;
+  line-height: 25px;
+}
+// scrollbar
+::-webkit-scrollbar {
+  height: 4px;
+  width: 4px;
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--clr-theme-primary);
+  -webkit-border-radius: 1ex;
+  -webkit-box-shadow: 0px 0px 0px rgba(0, 0, 0, 0.75);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+*::-moz-selection {
+  background: var(--clr-theme-primary);
+  color: var(--clr-common-white);
+  text-shadow: none;
+}
+::-moz-selection {
+  background: var(--clr-theme-primary);
+  color: var(--clr-common-white);
+  text-shadow: none;
+}
+::selection {
+  background: var(--clr-theme-primary);
+  color: var(--clr-common-white);
+  text-shadow: none;
+}
+/*--------------------------------------
+    - Input Placeholder
+-----------------------------------------*/
+*::-moz-placeholder {
+  color: var(--clr-common-placeholder);
+  font-size: 16px;
+  opacity: 1;
+}
+*::placeholder {
+  color: var(--clr-common-placeholder);
+  font-size: 16px;
+  opacity: 1;
+}
+/*---------------------------------------
+    - Common Classes
+-----------------------------------------*/
+.fix {
+  overflow: hidden;
+}
+.x-clip {
+  overflow-x: clip;
+}
+.y-clip {
+  overflow-y: clip;
+}
+// bootstrap css
+.container,
+.container-fluid,
+.container-lg,
+.container-md,
+.container-sm,
+.container-xl,
+.container-xxl {
+  width: 100%;
+  padding-inline-end: var(--bs-gutter-x, 15px);
+  padding-inline-start: var(--bs-gutter-x, 15px);
+  margin-inline-end: auto;
+  margin-inline-start: auto;
+}
+.row {
+  --bs-gutter-x: 30px;
+}
+.g-40,
+.gx-40 {
+  --bs-gutter-x: 40px;
+}
+.g-40,
+.gy-40 {
+  --bs-gutter-y: 40px;
+}
+.g-50,
+.gx-50 {
+  --bs-gutter-x: 50px;
+}
+.g-50,
+.gy-50 {
+  --bs-gutter-y: 50px;
+}
+@media (min-width: 1400px) {
+  .container-fluid {
+    max-width: 1810px;
+  }
+}
+@media (min-width: 1200px) {
+  .container-small {
+    max-width: 1200px;
+  }
+}
+.pr-60 {
+  padding-right: 60px;
+}
+.pl-60 {
+  padding-left: 60px;
+}
+.mb-5 {
+  margin-bottom: 5px !important;
+}
+.mb-10 {
+  margin-bottom: 10px;
+}
+.mb-15 {
+  margin-bottom: 15px;
+}
+.mb-20 {
+  margin-bottom: 20px;
+}
+.mb-25 {
+  margin-bottom: 25px;
+}
+.mb-30 {
+  margin-bottom: 30px;
+}
+.mb-35 {
+  margin-bottom: 35px;
+}
+.mb-40 {
+  margin-bottom: 40px;
+}
+.mb-50 {
+  margin-bottom: 50px;
+}
+.mt-5 {
+  margin-top: 5px !important;
+}

@@ -1,0 +1,14 @@
+@use "../abstract" as *;
+/*----------------------------------------
+	doc footer
+----------------------------------------*/
+
+.footer {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background: var(--clr-bg-card);
+	padding: 15px 30px 0 30px;
+	width: 100%;
+	overflow: hidden;
+}

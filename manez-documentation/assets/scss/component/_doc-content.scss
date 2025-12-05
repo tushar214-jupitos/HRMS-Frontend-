@@ -1,0 +1,37 @@
+@use "../abstract" as *;
+/*----------------------------------------
+	elements item
+----------------------------------------*/
+
+.changelog-content {
+	ul {
+		margin-left: 90px;
+	}
+	&-list {
+		&:not(:last-child) {
+			margin-bottom: 30px;
+		}
+	}
+}
+.rtl-content {
+	p {
+		color: var(--clr-text-label);
+	}
+	ul {
+		margin-left: 50px;
+		li {
+			color: var(--clr-common-black);
+		}
+	}
+}
+.setup-content {
+	p {
+		color: var(--clr-text-label);
+	}
+	ul {
+		margin-left: 50px;
+		li {
+			color: var(--clr-common-black);
+		}
+	}
+}

@@ -1,0 +1,49 @@
+@use "../abstract" as *;
+/*----------------------------------------
+	header item
+----------------------------------------*/
+
+.bd-badge {
+	font-size: 14px;
+	font-weight: 500;
+	padding: 4px 10px 4px 10px;
+	color: var(--clr-common-white);
+	background-color: var(--clr-theme-primary);
+	height: 26px;
+	display: inline-flex;
+	text-align: center;
+	border-radius: 10px;
+	justify-content: center;
+	align-items: center;
+}
+.card__wrapper {
+	background: var(--clr-bg-card);
+	padding: 25px 25px;
+	margin-bottom: 20px;
+	border-radius: 10px;
+	box-shadow: 0 6px 30px rgba(182, 186, 203, 0.3);
+	position: relative;
+	min-height: 747px;
+}
+.bd-doc-body {
+	position: absolute;
+	inset-inline-end: 0;
+	width: calc(100% - 275px);
+	transition: all 0.5s ease;
+	top: 30px;
+	padding: 0px 25px 0px 0px;
+}
+.theme-text {
+	color: var(--clr-theme-primary);
+}
+.text-label {
+	color: var(--clr-text-label);
+}
+.fs-14{
+	font-size: 14px;
+}
+pre {
+	display: block;
+	font-size: 20px;
+	color: var(--clr-text-label);
+}
