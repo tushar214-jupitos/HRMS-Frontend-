@@ -4,25 +4,122 @@ import { Dialog, DialogTitle, DialogContent } from "@mui/material";
 import { statePropsType } from "@/interface/common.interface";
 import { employeeDesignationData } from "@/data/dropdown-data";
 import { useForm } from "react-hook-form";
-import { IEmployee } from "@/interface";
 import InputField from "@/components/elements/SharedInputs/InputField";
 import FormLabel from "@/components/elements/SharedInputs/FormLabel";
 import DatePicker from "react-datepicker";
 import SelectBox from "@/components/elements/SharedInputs/SelectBox";
 import { toast } from "sonner";
 
+type EmployeeFormData = {
+  emp_id: string;
+  first_name: string;
+  last_name: string;
+  mobile: string;
+  official_email: string;
+  date_of_birth?: string;
+  father_or_husband_name?: string;
+  father_age?: number | string;
+  address?: string;
+  permanent_address?: string;
+  date_of_joining?: string;
+  overall_experience?: string;
+  previous_experience?: string;
+  designation?: string;
+  employed_status?: string;
+  role?: string;
+  department?: string;
+  bank_name?: string;
+  account_number?: string;
+  aadhaar_number?: string;
+  pan_number?: string;
+  has_uan?: boolean;
+};
+
 const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
-  const [selectStartDate, setSelectStartDate] = useState<Date | null>(new Date());
-  const { register, handleSubmit, control, formState: { errors } } = useForm<IEmployee>();
+  const [selectStartDate, setSelectStartDate] = useState<Date | null>(
+    new Date()
+  );
+  const [birthDate, setBirthDate] = useState<Date | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors },
+  } = useForm<EmployeeFormData>();
   const handleToggle = () => setOpen(!open);
 
+  const formatDate = (date: Date | null) =>
+    date ? date.toISOString().split("T")[0] : "";
+
+  // Handle reset
+  const handleReset = () => {
+    reset();
+    setSelectStartDate(new Date());
+    setBirthDate(null);
+  };
+
   // Handle form submission
-  const onSubmit = async (data: IEmployee) => {
+  const onSubmit = async (data: EmployeeFormData) => {
+    if (isSubmitting) return;
+
+    const payload = {
+      emp_id: data.emp_id,
+      first_name: data.first_name,
+      last_name: data.last_name,
+      mobile: data.mobile,
+      official_email: data.official_email,
+      date_of_birth: formatDate(birthDate),
+      father_or_husband_name: data.father_or_husband_name ?? "",
+      father_age: data.father_age ? Number(data.father_age) : undefined,
+      address: data.address ?? "",
+      permanent_address: data.permanent_address ?? "",
+      date_of_joining: formatDate(selectStartDate),
+      overall_experience: data.overall_experience ?? "",
+      previous_experience: data.previous_experience ?? "",
+      designation: data.designation ?? "",
+      employed_status: data.employed_status ?? "",
+      role: data.role ?? "",
+      department: data.department ?? "",
+      bank_name: data.bank_name ?? "",
+      account_number: data.account_number ?? "",
+      aadhaar_number: data.aadhaar_number ?? "",
+      pan_number: data.pan_number ?? "",
+      has_uan: Boolean(data.has_uan),
+    };
+
     try {
+      setIsSubmitting(true);
+
+      const response = await fetch(
+        "https://cichoriaceous-kristeen-unnormally.ngrok-free.dev/api/employee/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization:
+              "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY1NDQxMTQ0LCJpYXQiOjE3NjUwMDkxNDQsImp0aSI6IjgzMmNiNmJmMDAzZTRkMDU4MDBjOWUxNTM3NDgzMGE3IiwidXNlcl9pZCI6IjMifQ.gcC9lp3DZRPT4i9WeFYKj8RqRn-X9YRZKPhxygmdpeY",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!response.ok) {
+        const message = await response.text();
+        throw new Error(message || "Failed to add employee. Please try again.");
+      }
+
       toast.success("Employee added successfully!");
-      setTimeout(() => setOpen(false), 2000);
+      setTimeout(() => setOpen(false), 200);
     } catch (error) {
-      toast.error("Failed to add employee. Please try again.");
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to add employee. Please try again.";
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -48,72 +145,70 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
                 <div className="col-span-12 md:col-span-6 ">
                   <InputField
                     label="First Name"
-                    id="firstName "
+                    id="first_name"
                     type="text"
-                    register={register("firstName", {
+                    register={register("first_name", {
                       required: "First Name is required",
                     })}
-                    error={errors.firstName}
+                    error={errors.first_name}
                   />
                 </div>
                 <div className="col-span-12 md:col-span-6">
                   <InputField
                     label="Last Name"
-                    id="lastName "
+                    id="last_name"
                     type="text"
-                    register={register("lastName", {
+                    register={register("last_name", {
                       required: "Last Name is required",
                     })}
-                    error={errors.lastName}
+                    error={errors.last_name}
+                  />
+                </div>
+                <div className="col-span-12 md:col-span-6">
+                  <InputField
+                    label="Employee ID"
+                    id="emp_id"
+                    type="text"
+                    register={register("emp_id", {
+                      required: "Employee ID is required",
+                    })}
+                    error={errors.emp_id}
                   />
                 </div>
                 <div className="col-span-12 md:col-span-6">
                   <InputField
                     label="Contact Number"
-                    id="phone "
+                    id="mobile"
                     type="text"
-                    register={register("phone", {
+                    register={register("mobile", {
                       required: "Contact Number is required",
                     })}
-                    error={errors.phone}
+                    error={errors.mobile}
                   />
                 </div>
                 <div className="col-span-12 md:col-span-6">
                   <InputField
-                    label="Email"
-                    id="email "
+                    label="Official Email"
+                    id="official_email"
                     type="text"
-                    register={register("email", {
-                      required: "Email is required",
+                    register={register("official_email", {
+                      required: "Official Email is required",
                     })}
-                    error={errors.email}
+                    error={errors.official_email}
                   />
                 </div>
                 <div className="col-span-12 md:col-span-6">
                   <InputField
-                    label=" User Name"
-                    id="userName"
+                    label="Father / Husband Name"
+                    id="father_or_husband_name"
                     type="text"
-                    register={register("userName", {
-                      required: " User Name is required",
-                    })}
-                    error={errors.userName}
-                  />
-                </div>
-                <div className="col-span-12 md:col-span-6">
-                  <InputField
-                    label=" Employee ID"
-                    id="employeeID"
-                    type="text"
-                    register={register("employeeID", {
-                      required: " Employee ID is required",
-                    })}
-                    error={errors.employeeID}
+                    register={register("father_or_husband_name")}
+                    error={errors.father_or_husband_name}
                   />
                 </div>
                 <div className="col-span-12 text-center">
                   <InputField
-                    label="Address"
+                    label="Current Address"
                     id="address"
                     isTextArea={true}
                     required={true}
@@ -121,6 +216,15 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
                       required: "Address is required",
                     })}
                     error={errors.address}
+                  />
+                </div>
+                <div className="col-span-12 text-center">
+                  <InputField
+                    label="Permanent Address"
+                    id="permanent_address"
+                    isTextArea={true}
+                    register={register("permanent_address")}
+                    error={errors.permanent_address}
                   />
                 </div>
                 <div className="col-span-12 md:col-span-6">
@@ -153,48 +257,137 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
                   </div>
                 </div>
                 <div className="col-span-12 md:col-span-6">
+                  <FormLabel label="Date of Birth" id="date_of_birth" />
+                  <div className="datepicker-style">
+                    <DatePicker
+                      id="date_of_birth"
+                      selected={birthDate}
+                      onChange={(date) => setBirthDate(date)}
+                      showYearDropdown
+                      showMonthDropdown
+                      useShortMonthInDropdown
+                      showPopperArrow={false}
+                      peekNextMonth
+                      dropdownMode="select"
+                      isClearable
+                      dateFormat="dd/MM/yyyy"
+                      placeholderText="Date of birth"
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+                <div className="col-span-12 md:col-span-6">
                   <InputField
-                    label=" Account Holder Name"
-                    id="accountHolderName"
-                    type="text"
-                    register={register("accountHolderName", {
-                      required: " Account Holder Name is required",
-                    })}
-                    error={errors.accountHolderName}
+                    label="Father / Husband Age"
+                    id="father_age"
+                    type="number"
+                    register={register("father_age")}
+                    error={errors.father_age}
                   />
                 </div>
                 <div className="col-span-12 md:col-span-6">
                   <InputField
-                    label="Account Number"
-                    id="accountNumber"
+                    label="Overall Experience (years)"
+                    id="overall_experience"
                     type="text"
-                    register={register("accountNumber", {
-                      required: "Account Number is required",
-                    })}
-                    error={errors.accountNumber}
+                    register={register("overall_experience")}
+                    error={errors.overall_experience}
+                  />
+                </div>
+                <div className="col-span-12 md:col-span-6">
+                  <InputField
+                    label="Previous Experience (years)"
+                    id="previous_experience"
+                    type="text"
+                    register={register("previous_experience")}
+                    error={errors.previous_experience}
+                  />
+                </div>
+                <div className="col-span-12 md:col-span-6">
+                  <InputField
+                    label="Employed Status"
+                    id="employed_status"
+                    type="text"
+                    register={register("employed_status")}
+                    error={errors.employed_status}
+                  />
+                </div>
+                <div className="col-span-12 md:col-span-6">
+                  <InputField
+                    label="Role"
+                    id="role"
+                    type="text"
+                    register={register("role")}
+                    error={errors.role}
+                  />
+                </div>
+                <div className="col-span-12 md:col-span-6">
+                  <InputField
+                    label="Department"
+                    id="department"
+                    type="text"
+                    register={register("department")}
+                    error={errors.department}
                   />
                 </div>
                 <div className="col-span-12 md:col-span-6">
                   <InputField
                     label="Bank Name"
-                    id="bankName"
+                    id="bank_name"
                     type="text"
-                    register={register("bankName", {
-                      required: "Bank Name is required",
-                    })}
-                    error={errors.bankName}
+                    register={register("bank_name")}
+                    error={errors.bank_name}
                   />
                 </div>
                 <div className="col-span-12 md:col-span-6">
                   <InputField
-                    label="Branch Name"
-                    id="branchName"
+                    label="Account Number"
+                    id="account_number"
                     type="text"
-                    register={register("branchName", {
-                      required: "Branch Name is required",
-                    })}
-                    error={errors.branchName}
+                    register={register("account_number")}
+                    error={errors.account_number}
                   />
+                </div>
+                <div className="col-span-12 md:col-span-6">
+                  <InputField
+                    label="Aadhaar Number"
+                    id="aadhaar_number"
+                    type="text"
+                    register={register("aadhaar_number")}
+                    error={errors.aadhaar_number}
+                  />
+                </div>
+                <div className="col-span-12 md:col-span-6">
+                  <InputField
+                    label="PAN Number"
+                    id="pan_number"
+                    type="text"
+                    register={register("pan_number")}
+                    error={errors.pan_number}
+                  />
+                </div>
+                <div className="col-span-12 md:col-span-6">
+                  <div className="from__input-box">
+                    <div className="form__input-title">
+                      <label htmlFor="has_uan" className="input__label">
+                        Has UAN
+                      </label>
+                    </div>
+                    <div className="form__input flex items-center gap-2 pt-2">
+                      <input
+                        id="has_uan"
+                        type="checkbox"
+                        className="h-4 w-4"
+                        {...register("has_uan")}
+                      />
+                      <label
+                        htmlFor="has_uan"
+                        className="mb-0 cursor-pointer text-black dark:text-white"
+                      >
+                        Yes
+                      </label>
+                    </div>
+                  </div>
                 </div>
                 <div className="col-span-12">
                   <div className="from__input-box">
@@ -214,9 +407,20 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
                 </div>
               </div>
             </div>
-            <div className="submit__btn text-center">
-              <button className="btn btn-primary" type="submit">
-                Submit
+            <div className="submit__btn text-center flex justify-center gap-3">
+              <button
+                className="btn btn-secondary"
+                type="button"
+                onClick={handleReset}
+              >
+                Reset
+              </button>
+              <button
+                className="btn btn-primary"
+                type="submit"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Submitting..." : "Submit"}
               </button>
             </div>
           </form>
