@@ -15,7 +15,7 @@ const sidebarData: SidebarCategory[] = [
             label: "Employee Dashboard",
             link: "/dashboard/employee-dashboard",
           },
-          { label: "CRM Analytics", link: "/dashboard/crm-dashboard" },
+          // { label: "CRM Analytics", link: "/dashboard/crm-dashboard" },
         ],
       },
       {
@@ -40,16 +40,16 @@ const sidebarData: SidebarCategory[] = [
           { label: "Warning", link: "/hrm/warning" },
         ],
       },
-      {
-        id: 3,
-        label: "CRM",
-        icon: "icon-crm",
-        subItems: [
-          { label: "Leads", link: "/crm/leads" },
-          { label: "Deals", link: "/crm/deals" },
-          { label: "CRM Setup", link: "/crm/crm-setup" },
-        ],
-      },
+      // {
+      //   id: 3,
+      //   label: "CRM",
+      //   icon: "icon-crm",
+      //   subItems: [
+      //     { label: "Leads", link: "/crm/leads" },
+      //     { label: "Deals", link: "/crm/deals" },
+      //     { label: "CRM Setup", link: "/crm/crm-setup" },
+      //   ],
+      // },
       {
         id: 4,
         label: "Apps",
