@@ -25,7 +25,7 @@ type EmployeeFormData = {
   overall_experience?: string;
   previous_experience?: string;
   designation?: string;
-  employed_status?: string;
+  // employed_status?: string;
   role?: string;
   department?: string;
   bank_name?: string;
@@ -82,7 +82,7 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
       overall_experience: data.overall_experience ?? "",
       previous_experience: data.previous_experience ?? "",
       designation: data.designation ?? "",
-      employed_status: data.employed_status ?? "",
+      // employed_status: data.employed_status ?? "",
       role: data.role ?? "",
       department: data.department ?? "",
       bank_name: data.bank_name ?? "",
@@ -96,18 +96,17 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
     try {
       setIsSubmitting(true);
 
-      const response = await fetch(
-        "https://cichoriaceous-kristeen-unnormally.ngrok-free.dev/api/employee/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization:
-              "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY1NDQxMTQ0LCJpYXQiOjE3NjUwMDkxNDQsImp0aSI6IjgzMmNiNmJmMDAzZTRkMDU4MDBjOWUxNTM3NDgzMGE3IiwidXNlcl9pZCI6IjMifQ.gcC9lp3DZRPT4i9WeFYKj8RqRn-X9YRZKPhxygmdpeY",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/employee/`;
+      const token = process.env.NEXT_PUBLIC_API_TOKEN;
+
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
 
       if (!response.ok) {
         const message = await response.text();
