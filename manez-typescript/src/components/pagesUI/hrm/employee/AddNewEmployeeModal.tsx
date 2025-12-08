@@ -33,6 +33,7 @@ type EmployeeFormData = {
   aadhaar_number?: string;
   pan_number?: string;
   has_uan?: boolean;
+  uan_number?: string;
 };
 
 const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
@@ -46,8 +47,10 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
     handleSubmit,
     control,
     reset,
+    watch,
     formState: { errors },
   } = useForm<EmployeeFormData>();
+  const uanCheckboxValue = watch("has_uan");
   const handleToggle = () => setOpen(!open);
 
   const formatDate = (date: Date | null) =>
@@ -87,6 +90,7 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
       aadhaar_number: data.aadhaar_number ?? "",
       pan_number: data.pan_number ?? "",
       has_uan: Boolean(data.has_uan),
+      uan_number: data.uan_number ?? "",
     };
 
     try {
@@ -303,7 +307,7 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
                     error={errors.previous_experience}
                   />
                 </div>
-                <div className="col-span-12 md:col-span-6">
+                {/* <div className="col-span-12 md:col-span-6">
                   <InputField
                     label="Employed Status"
                     id="employed_status"
@@ -311,7 +315,7 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
                     register={register("employed_status")}
                     error={errors.employed_status}
                   />
-                </div>
+                </div> */}
                 <div className="col-span-12 md:col-span-6">
                   <InputField
                     label="Role"
@@ -389,6 +393,17 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
                     </div>
                   </div>
                 </div>
+                {uanCheckboxValue && (
+                  <div className="col-span-12 md:col-span-6">
+                    <InputField
+                      label="UAN Number"
+                      id="uan_number"
+                      type="text"
+                      register={register("uan_number")}
+                      error={errors.uan_number}
+                    />
+                  </div>
+                )}
                 <div className="col-span-12">
                   <div className="from__input-box">
                     <div className="form__input-title">
