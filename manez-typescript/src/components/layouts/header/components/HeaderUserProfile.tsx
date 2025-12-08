@@ -29,6 +29,7 @@ interface IUserResponse {
     role: string;
     phone: string;
     department: string | null;
+    is_active: boolean;
   };
 }
 
@@ -37,6 +38,8 @@ const HeaderUserProfile = ({
   isOpenUserDropdown,
 }: TUserProps) => {
   const [user, setUser] = useState<IUserResponse | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   // -----------------------------
   // Fetch User (Authenticated)
@@ -44,13 +47,13 @@ const HeaderUserProfile = ({
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        // Read token from storage
         const token =
           localStorage.getItem("accessToken") ||
           sessionStorage.getItem("accessToken");
 
         if (!token) {
-          console.warn("No access token found.");
+          setError("Authentication token not found");
+          setLoading(false);
           return;
         }
 
@@ -59,26 +62,53 @@ const HeaderUserProfile = ({
           {
             method: "GET",
             headers: {
+              "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
-             // "Content-Type": "application/json",
+              "ngrok-skip-browser-warning": "true",
             },
           }
         );
 
         if (!res.ok) {
-          console.error("Failed to fetch user data.");
-          return;
+          throw new Error(`HTTP error! Status: ${res.status}`);
         }
 
         const data = await res.json();
         setUser(data);
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error fetching user:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchUser();
   }, []);
+
+  // Conditional render of profile data or loading spinner
+  const renderProfileInfo = () => {
+    if (loading) {
+      return <span>Loading...</span>;
+    }
+
+    if (error) {
+      return <span className="text-red-500">Error: {error}</span>;
+    }
+
+    if (user) {
+      return (
+        <>
+          <h5>{`${user.first_name} ${user.last_name}`}</h5>
+          <span>{user.email}</span>
+          <div>{user.profile.role}</div>
+          {user.profile.phone && <div>{user.profile.phone}</div>}
+        </>
+      );
+    }
+
+    return <span>No user data available</span>;
+  };
 
   return (
     <div className="nav-item relative">
@@ -89,12 +119,7 @@ const HeaderUserProfile = ({
             <Image src={avatarImg} width={40} height={40} alt="avatar" />
           </div>
 
-          <div className="user__content">
-            <h5>
-              {user ? `${user.first_name} ${user.last_name}` : "Loading..."}
-            </h5>
-            <span>{user ? user.email : "Fetching..."}</span>
-          </div>
+          <div className="user__content">{renderProfileInfo()}</div>
         </div>
       </Link>
 
