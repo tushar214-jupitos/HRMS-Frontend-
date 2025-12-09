@@ -26,6 +26,7 @@ import { useRouter } from "next/navigation";
 import useMaterialTableHook from "@/hooks/useMaterialTableHook";
 import TableControls from "@/components/elements/SharedInputs/TableControls";
 import EditEmployeeModal from "./EditEmployeeModal";
+import { useTableStatusHook } from "@/hooks/use-condition-class";
 
 interface EmployeeListViewProps {
   employees: IEmployee[];
@@ -45,6 +46,7 @@ const headCells: HeadCell[] = [
   { id: "email", label: "Email" },
   { id: "phone", label: "Phone" },
   { id: "joiningDate", label: "Joining Date" },
+  { id: "action", label: "Status" },
   { id: "action", label: "Action" },
 ];
 
@@ -219,6 +221,9 @@ const EmployeeListView = ({
                 <TableBody className="table__body">
                   {paginatedRows.map((employee, index) => {
                     const isItemSelected = selected.includes(index);
+                    const statusClass = useTableStatusHook(
+                      (employee as any).employed_status
+                    );
                     return (
                       <TableRow
                         key={employee.id || index}
@@ -262,6 +267,11 @@ const EmployeeListView = ({
                                 employee.joiningDate
                               ).toLocaleDateString()
                             : "N/A"}
+                        </TableCell>
+                        <TableCell>
+                          <span className={`bd-badge ${statusClass}`}>
+                            {(employee as any).employed_status || "Inactive"}
+                          </span>
                         </TableCell>
                         <TableCell className="table__icon-box">
                           <div className="flex items-center justify-start gap-[10px]">

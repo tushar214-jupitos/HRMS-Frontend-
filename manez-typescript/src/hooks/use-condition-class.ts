@@ -20,49 +20,51 @@ export const useAttendanceHook = (tag: any) => {
 };
 // "Paid" | "Unpaid" | "Cancel" | "Refund";
 export const useTableStatusHook = (tag: any) => {
-  switch (tag) {
-    case "Pending":
+  switch (tag?.toLowerCase()) {
+    case "pending":
       return "bg-warning";
-    case "Reject":
+    case "reject":
       return "bg-danger";
-    case "Rejected":
+    case "rejected":
       return "bg-danger";
-    case "Contacted":
+    case "contacted":
       return "bg-info";
-    case "Approved":
+    case "approved":
       return "bg-success";
-    case "Active":
+    case "active":
       return "bg-success";
-    case "Inactive":
+    case "full time":
+      return "bg-success";
+    case "inactive":
       return "bg-danger";
-    case "Paid":
+    case "paid":
       return "bg-success";
-    case "Unpaid":
+    case "unpaid":
       return "bg-secondary";
-    case "Partial":
+    case "partial":
       return "bg-warning";
-    case "Won":
+    case "won":
       return "bg-success";
-    case "Open":
+    case "open":
       return "bg-primary";
-    case "Lost":
+    case "lost":
       return "bg-danger";
-    case "Returned":
+    case "returned":
       return "bg-warning";
-    case "Upcoming":
+    case "upcoming":
       return "bg-warning";
-    case "Complete":
+    case "complete":
       return "bg-success";
-    case "Cancel":
+    case "cancel":
       return "bg-danger";
-    case "In Progress":
+    case "in progress":
       return "bg-warning";
-    case "Closed":
+    case "closed":
       return "bg-danger";
-    case "Refund":
+    case "refund":
       return "bg-link";
     default:
-      return "";
+      return "bg-secondary";
   }
 };
 

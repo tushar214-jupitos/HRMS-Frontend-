@@ -80,6 +80,7 @@ const EmployeeMainArea = () => {
           address: emp.address,
           bankName: emp.bank_name,
           accountNumber: emp.account_number,
+          employed_status: emp.employed_status,
         }));
 
         // Calculate statistics
