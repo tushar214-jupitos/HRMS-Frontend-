@@ -26,6 +26,7 @@ export interface IEmployee {
   position: string;
   phone: string;
   socialLinks: SocialLinks;
+  [key: string]: any;
 }
 
 export interface IEmployeeProfileDetails {

@@ -42,6 +42,8 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
   );
   const [birthDate, setBirthDate] = useState<Date | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [employeePhoto, setEmployeePhoto] = useState<File | null>(null);
+  const [documents, setDocuments] = useState<File[]>([]);
   const {
     register,
     handleSubmit,
@@ -61,6 +63,21 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
     reset();
     setSelectStartDate(new Date());
     setBirthDate(null);
+    setEmployeePhoto(null);
+    setDocuments([]);
+  };
+
+  // Handle file uploads
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setEmployeePhoto(e.target.files[0]);
+    }
+  };
+
+  const handleDocumentsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setDocuments(Array.from(e.target.files));
+    }
   };
 
   // Handle form submission
@@ -415,7 +432,45 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
                         className="form-control"
                         id="sellerphoto"
                         type="file"
+                        accept="image/*"
+                        onChange={handlePhotoChange}
                       />
+                      {employeePhoto && (
+                        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                          Selected: {employeePhoto.name}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="col-span-12">
+                  <div className="from__input-box">
+                    <div className="form__input-title">
+                      <label htmlFor="documents">
+                        Upload Documents (Aadhaar, PAN, etc.)
+                      </label>
+                    </div>
+                    <div className="form__input">
+                      <input
+                        className="form-control"
+                        id="documents"
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                        multiple
+                        onChange={handleDocumentsChange}
+                      />
+                      {documents.length > 0 && (
+                        <div className="mt-2">
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {documents.length} file(s) selected:
+                          </p>
+                          <ul className="text-sm text-gray-600 dark:text-gray-400 list-disc list-inside">
+                            {documents.map((file, index) => (
+                              <li key={index}>{file.name}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

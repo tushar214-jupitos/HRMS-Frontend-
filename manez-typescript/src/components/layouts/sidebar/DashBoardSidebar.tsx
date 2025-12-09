@@ -288,7 +288,7 @@ const DashBoardSidebar = () => {
             </ul>
           </nav>
 
-          <div
+          {/* <div
             className="sidebar__thumb sidebar-bg"
             style={{ backgroundImage: `url(${sidebarImg.src})` }}
           >
@@ -303,7 +303,7 @@ const DashBoardSidebar = () => {
                 Get Pro Now!
               </Link>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
       <div className="app__offcanvas-overlay"></div>
