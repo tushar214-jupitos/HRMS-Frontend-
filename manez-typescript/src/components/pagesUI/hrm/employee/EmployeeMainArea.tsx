@@ -3,6 +3,8 @@ import Breadcrumb from "@/common/Breadcrumb/breadcrumb";
 import React, { useEffect, useState } from "react";
 import EmployeeFilter from "./EmployeeFilter";
 import EmployeeSingleCard from "@/components/common/EmployeeSingleCard";
+import EmployeeDashboardCard from "./EmployeeDashboardCard";
+import AddNewEmployeeModal from "./AddNewEmployeeModal";
 import { IEmployee } from "@/interface";
 import { StaticImageData } from "next/image";
 import avatarPlaceholder from "../../../../../public/assets/images/avatar/avatar.png";
@@ -13,6 +15,10 @@ const EmployeeMainArea = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"card" | "list">("card");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [activeCount, setActiveCount] = useState(0);
+  const [inactiveCount, setInactiveCount] = useState(0);
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -76,6 +82,21 @@ const EmployeeMainArea = () => {
           accountNumber: emp.account_number,
         }));
 
+        // Calculate statistics
+        const total = employeeList.length;
+        const active = employeeList.filter(
+          (emp: any) =>
+            emp.employed_status === "Active" || emp.employed_status === "active"
+        ).length;
+        const inactive = employeeList.filter(
+          (emp: any) =>
+            emp.employed_status === "Inactive" ||
+            emp.employed_status === "inactive"
+        ).length;
+
+        setTotalCount(total);
+        setActiveCount(active);
+        setInactiveCount(inactive);
         setEmployees(transformedData);
         setError(null);
       } catch (err) {
@@ -138,6 +159,37 @@ const EmployeeMainArea = () => {
     <>
       <div className="app__slide-wrapper">
         <Breadcrumb breadTitle="Employee" subTitle="Home" />
+
+        {/* Dashboard Cards and Add Employee Button */}
+        <div className="grid grid-cols-12 gap-x-6 maxXs:gap-x-0 mb-[20px] items-end">
+          <div className="col-span-12 xxl:col-span-9">
+            <div className="grid grid-cols-12 gap-x-6 maxXs:gap-x-0 h-full">
+              <EmployeeDashboardCard
+                totalCount={totalCount}
+                activeCount={activeCount}
+                inactiveCount={inactiveCount}
+              />
+            </div>
+          </div>
+          <div className="col-span-12 xxl:col-span-3 flex justify-end h-full">
+            <div className="card__wrapper w-full xxl:w-auto">
+              <button
+                type="button"
+                className="btn btn-primary w-full"
+                data-bs-toggle="modal"
+                data-bs-target="#addNewEmployee"
+                onClick={() => setModalOpen(true)}
+              >
+                Add Employee
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {modalOpen && (
+          <AddNewEmployeeModal open={modalOpen} setOpen={setModalOpen} />
+        )}
+
         <EmployeeFilter />
 
         {/* View Toggle Buttons */}
