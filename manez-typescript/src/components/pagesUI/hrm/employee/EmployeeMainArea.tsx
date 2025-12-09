@@ -17,11 +17,9 @@ const EmployeeMainArea = () => {
       try {
         setLoading(true);
         const apiUrl =
-          process.env.NEXT_PUBLIC_API_BASE_URL ||
-          "https://cichoriaceous-kristeen-unnormally.ngrok-free.dev/api";
+          process.env.NEXT_PUBLIC_API_BASE_URL;
         const token =
-          process.env.NEXT_PUBLIC_API_TOKEN ||
-          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY1NDQxMTQ0LCJpYXQiOjE3NjUwMDkxNDQsImp0aSI6IjgzMmNiNmJmMDAzZTRkMDU4MDBjOWUxNTM3NDgzMGE3IiwidXNlcl9pZCI6IjMifQ.gcC9lp3DZRPT4i9WeFYKj8RqRn-X9YRZKPhxygmdpeY";
+          process.env.NEXT_PUBLIC_API_TOKEN;
 
         const response = await fetch(`${apiUrl}/employee/`, {
           method: "GET",
