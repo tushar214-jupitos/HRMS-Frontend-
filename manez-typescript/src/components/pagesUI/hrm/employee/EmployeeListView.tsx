@@ -11,16 +11,26 @@ import TableRow from "@mui/material/TableRow";
 import TableSortLabel from "@mui/material/TableSortLabel";
 import Paper from "@mui/material/Paper";
 import { visuallyHidden } from "@mui/utils";
-import { Checkbox } from "@mui/material";
+import {
+  Checkbox,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+} from "@mui/material";
 import { IEmployee } from "@/interface";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import useMaterialTableHook from "@/hooks/useMaterialTableHook";
 import TableControls from "@/components/elements/SharedInputs/TableControls";
+import EditEmployeeModal from "./EditEmployeeModal";
 
 interface EmployeeListViewProps {
   employees: IEmployee[];
+  onEmployeeDeleted?: () => void;
+  onEmployeeUpdated?: () => void;
 }
 
 interface HeadCell {
@@ -38,8 +48,19 @@ const headCells: HeadCell[] = [
   { id: "action", label: "Action" },
 ];
 
-const EmployeeListView = ({ employees }: EmployeeListViewProps) => {
+const EmployeeListView = ({
+  employees,
+  onEmployeeDeleted,
+  onEmployeeUpdated,
+}: EmployeeListViewProps) => {
   const router = useRouter();
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [employeeToDelete, setEmployeeToDelete] = useState<IEmployee | null>(
+    null
+  );
+  const [deleting, setDeleting] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [employeeToEdit, setEmployeeToEdit] = useState<IEmployee | null>(null);
 
   const {
     order,
@@ -60,6 +81,75 @@ const EmployeeListView = ({ employees }: EmployeeListViewProps) => {
 
   const handleViewEmployee = (id: number) => {
     router.push(`/hrm/employee-profile/${id}`);
+  };
+
+  const handleDeleteClick = (employee: IEmployee) => {
+    setEmployeeToDelete(employee);
+    setDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!employeeToDelete) return;
+
+    try {
+      setDeleting(true);
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const token = process.env.NEXT_PUBLIC_API_TOKEN;
+
+      const response = await fetch(
+        `${apiUrl}/employee/${employeeToDelete.id}/`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete employee");
+      }
+
+      // Show success message
+      alert(`Employee ${employeeToDelete.name} deleted successfully`);
+
+      // Call callback to refresh employee list
+      if (onEmployeeDeleted) {
+        onEmployeeDeleted();
+      }
+
+      setDeleteConfirm(false);
+      setEmployeeToDelete(null);
+    } catch (err) {
+      console.error("Error deleting employee:", err);
+      alert(err instanceof Error ? err.message : "Failed to delete employee");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteConfirm(false);
+    setEmployeeToDelete(null);
+  };
+
+  const handleEditClick = (employee: IEmployee) => {
+    setEmployeeToEdit(employee);
+    setEditModalOpen(true);
+  };
+
+  const handleEditModalClose = () => {
+    setEditModalOpen(false);
+    setEmployeeToEdit(null);
+  };
+
+  const handleEditSuccess = () => {
+    handleEditModalClose();
+    if (onEmployeeUpdated) {
+      onEmployeeUpdated();
+    }
   };
 
   return (
@@ -191,7 +281,7 @@ const EmployeeListView = ({ employees }: EmployeeListViewProps) => {
                               className="table__icon edit"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                // Add edit functionality
+                                handleEditClick(employee);
                               }}
                               title="Edit"
                             >
@@ -201,7 +291,7 @@ const EmployeeListView = ({ employees }: EmployeeListViewProps) => {
                               className="removeBtn table__icon delete"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                // Add delete functionality
+                                handleDeleteClick(employee);
                               }}
                               title="Delete"
                             >
@@ -234,6 +324,41 @@ const EmployeeListView = ({ employees }: EmployeeListViewProps) => {
           />
         </Box>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteConfirm} onClose={handleCancelDelete}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <p>
+            Are you sure you want to delete{" "}
+            <strong>{employeeToDelete?.name}</strong>? This action cannot be
+            undone.
+          </p>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelDelete} disabled={deleting}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            color="error"
+            variant="contained"
+            disabled={deleting}
+          >
+            {deleting ? "Deleting..." : "Delete"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Employee Modal */}
+      {employeeToEdit && (
+        <EditEmployeeModal
+          open={editModalOpen}
+          employee={employeeToEdit}
+          onClose={handleEditModalClose}
+          onSuccess={handleEditSuccess}
+        />
+      )}
     </div>
   );
 };

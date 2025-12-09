@@ -242,7 +242,17 @@ const EmployeeMainArea = () => {
                 </div>
               </>
             ) : (
-              <EmployeeListView employees={employees} />
+              <EmployeeListView
+                employees={employees}
+                onEmployeeDeleted={() => {
+                  // Refresh employee list
+                  window.location.reload();
+                }}
+                onEmployeeUpdated={() => {
+                  // Refresh employee list
+                  window.location.reload();
+                }}
+              />
             )}
           </>
         )}
