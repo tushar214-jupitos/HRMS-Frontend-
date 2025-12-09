@@ -24,6 +24,7 @@ const sidebarData: SidebarCategory[] = [
         icon: "icon-hrm",
         subItems: [
           { label: "Employee", link: "/hrm/employee" },
+          { label: "Users", link: "/hrm/user" },
           { label: "Employee Profile", link: "/hrm/employee-profile" },
           { label: "Designations", link: "/hrm/designations" },
           { label: "Admin Attendance", link: "/hrm/attendance" },

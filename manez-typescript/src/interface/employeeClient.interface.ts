@@ -10,7 +10,7 @@ interface SocialLinks {
 }
 export interface IEmployee {
   id: number;
-  image: StaticImageData;
+  image: string | StaticImageData;
   name: string;
   firstName?: string;
   lastName?: string;

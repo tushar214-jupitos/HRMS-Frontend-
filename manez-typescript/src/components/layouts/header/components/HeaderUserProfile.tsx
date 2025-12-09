@@ -9,8 +9,9 @@ import avatarImg from "../../../../../public/assets/images/avatar/avatar.png";
 import UserIcon from "@/svg/header-svg/Profile/UserIcon";
 import ChatIcon from "@/svg/header-svg/Profile/ChatIcon";
 import EmailIcon from "@/svg/header-svg/Profile/EmailIcon";
-import AddAccountIcon from "@/svg/header-svg/Profile/AddAccountIcon";
+//import AddAccountIcon from "@/svg/header-svg/Profile/SettingIcon";
 import LogOut from "@/svg/header-svg/Profile/LogOut";
+import SettingIcon from "@/svg/header-svg/Profile/SettingIcon";
 
 // Props
 type TUserProps = {
@@ -101,8 +102,8 @@ const HeaderUserProfile = ({
         <>
           <h5>{`${user.first_name} ${user.last_name}`}</h5>
           <span>{user.email}</span>
-          <div>{user.profile.role}</div>
-          {user.profile.phone && <div>{user.profile.phone}</div>}
+         {/* / <div>{user.profile.role}</div> */}
+          {/* {user.profile.phone && <div>{user.profile.phone}</div>} */}
         </>
       );
     }
@@ -153,9 +154,9 @@ const HeaderUserProfile = ({
             </li>
 
             <li>
-              <Link href="/auth/signup-basic">
-                <AddAccountIcon />
-                Add Account
+              <Link href="/setting">
+                <SettingIcon />
+                Setting
               </Link>
             </li>
 
