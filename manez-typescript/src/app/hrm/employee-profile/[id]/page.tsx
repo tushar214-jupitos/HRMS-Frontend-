@@ -3,8 +3,8 @@ import EmployeeProfileMainArea from "@/components/pagesUI/hrm/employee-profile/E
 import MetaData from "@/hooks/useMetaData";
 import React from "react";
 
-const page = ({ params }: { params: { id: number } }) => {
-  const id = params.id;
+const page = ({ params }: { params: { id: string } }) => {
+  const id = Number(params.id);
   return (
     <>
       <MetaData pageTitle="Employee Details Dynamic">

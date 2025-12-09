@@ -4,6 +4,7 @@ import Link from "next/link";
 import React, { useState } from "react";
 import UpdateEmployeeProfileModal from "./UpdateEmployeeProfileModal";
 import { IEmployee } from "@/interface";
+import avatarPlaceholder from "../../../../../public/assets/images/avatar/avatar.png";
 
 interface propsType {
   data: IEmployee | any;
@@ -32,28 +33,33 @@ const PersonalInformation = ({ data }: propsType) => {
                   <div className="profile-img">
                     <Link href="#">
                       <Image
-                        src={data?.image}
+                        src={data?.image || avatarPlaceholder}
                         priority
                         style={{ width: "100%", height: "auto" }}
-                        alt={`${data?.name} image`}
+                        alt={`${data?.name || "Employee"} image`}
                       />
                     </Link>
                   </div>
                 </div>
                 <div className="profile-info">
-                  <h3 className="user-name mb-[15px]">{data?.name}</h3>
-                  <h6 className="text-muted mb-[5px]">{data?.position}</h6>
-                  <span className="block text-muted">Web Designer</span>
-                  <h6 className="small employee-id text-black mb-[5px] mt-[5px]">
-                    Employee ID : MD-0001
+                  <h3 className="user-name mb-[15px]">{data?.name || "N/A"}</h3>
+                  <h6 className="text-muted mb-[5px]">
+                    {data?.position || "N/A"}
                   </h6>
                   <span className="block text-muted">
-                    Date of Join : 05 01 2024
+                    {data?.role || data?.position || ""}
+                  </span>
+                  <h6 className="small employee-id text-black mb-[5px] mt-[5px]">
+                    Employee ID : {data?.employeeID || "N/A"}
+                  </h6>
+                  <span className="block text-muted">
+                    Date of Join :{" "}
+                    {data?.joiningDate
+                      ? new Date(data.joiningDate).toLocaleDateString()
+                      : "N/A"}
                   </span>
                   <div className="employee-msg mt-[20px]">
-                    <button className="btn btn-primary">
-                      Send Message
-                    </button>
+                    <button className="btn btn-primary">Send Message</button>
                   </div>
                 </div>
               </div>
@@ -62,30 +68,34 @@ const PersonalInformation = ({ data }: propsType) => {
                   <li>
                     <div className="title">Phone:</div>
                     <div className="text text-link-hover">
-                      <Link href="tel:+18006427676">{data?.phone}</Link>
+                      {data?.phone ? (
+                        <Link href={`tel:${data.phone}`}>{data.phone}</Link>
+                      ) : (
+                        "N/A"
+                      )}
                     </div>
                   </li>
                   <li>
                     <div className="title">Email:</div>
                     <div className="text text-link-hover">
-                      <Link href="mailto:ethanmitchell@example.com">
-                        ethanmitchell@example.com
-                      </Link>
+                      {data?.email ? (
+                        <Link href={`mailto:${data.email}`}>{data.email}</Link>
+                      ) : (
+                        "N/A"
+                      )}
                     </div>
                   </li>
                   <li>
                     <div className="title">Birthday:</div>
-                    <div className="text">28 December 1992</div>
+                    <div className="text">{data?.date_of_birth || "N/A"}</div>
                   </li>
                   <li>
                     <div className="title">Address:</div>
-                    <div className="text">
-                      100 Terminal, Fort Lauderdale, Miami 33315, United States
-                    </div>
+                    <div className="text">{data?.address || "N/A"}</div>
                   </li>
                   <li>
                     <div className="title">Gender:</div>
-                    <div className="text">Male</div>
+                    <div className="text">{data?.gender || "N/A"}</div>
                   </li>
                 </ul>
               </div>
