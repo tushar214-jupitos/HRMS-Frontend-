@@ -76,8 +76,36 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
 
   const handleDocumentsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      setDocuments(Array.from(e.target.files));
+      const fileList = Array.from(e.target.files);
+      // Validate file sizes (max 10MB per file)
+      const validFiles = fileList.filter((file) => {
+        if (file.size > 10 * 1024 * 1024) {
+          toast.error(`${file.name} is larger than 10MB`);
+          return false;
+        }
+        return true;
+      });
+      // Add to existing documents (avoid duplicates)
+      const newDocuments = [...documents, ...validFiles];
+      const uniqueDocuments = newDocuments.filter(
+        (file, index, self) =>
+          index ===
+          self.findIndex((f) => f.name === file.name && f.size === file.size)
+      );
+      setDocuments(uniqueDocuments);
     }
+  };
+
+  const handleRemoveDocument = (index: number) => {
+    setDocuments((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
   // Handle form submission
@@ -449,6 +477,9 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
                       <label htmlFor="documents">
                         Upload Documents (Aadhaar, PAN, etc.)
                       </label>
+                      <span className="text-gray-500 text-sm ml-2">
+                        (Max 10MB per file)
+                      </span>
                     </div>
                     <div className="form__input">
                       <input
@@ -460,13 +491,36 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
                         onChange={handleDocumentsChange}
                       />
                       {documents.length > 0 && (
-                        <div className="mt-2">
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <div className="mt-4">
+                          <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
                             {documents.length} file(s) selected:
                           </p>
-                          <ul className="text-sm text-gray-600 dark:text-gray-400 list-disc list-inside">
+                          <ul className="space-y-2">
                             {documents.map((file, index) => (
-                              <li key={index}>{file.name}</li>
+                              <li
+                                key={index}
+                                className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 p-3 rounded border border-gray-200 dark:border-gray-700"
+                              >
+                                <div className="flex items-center gap-3 flex-1">
+                                  <i className="fa-regular fa-file text-primary"></i>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm text-gray-700 dark:text-gray-300 truncate">
+                                      {file.name}
+                                    </p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                      {formatFileSize(file.size)}
+                                    </p>
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveDocument(index)}
+                                  className="ml-2 text-red-500 hover:text-red-700 transition"
+                                  title="Remove file"
+                                >
+                                  <i className="fa-regular fa-trash-can"></i>
+                                </button>
+                              </li>
                             ))}
                           </ul>
                         </div>
