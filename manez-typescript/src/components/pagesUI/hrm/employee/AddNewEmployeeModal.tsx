@@ -2,7 +2,10 @@
 import React, { useState } from "react";
 import { Dialog, DialogTitle, DialogContent } from "@mui/material";
 import { statePropsType } from "@/interface/common.interface";
-import { employeeDesignationData } from "@/data/dropdown-data";
+import {
+  employeeDesignationData,
+  employeeStatusData,
+} from "@/data/dropdown-data";
 import { useForm } from "react-hook-form";
 import InputField from "@/components/elements/SharedInputs/InputField";
 import FormLabel from "@/components/elements/SharedInputs/FormLabel";
@@ -25,7 +28,7 @@ type EmployeeFormData = {
   overall_experience?: string;
   previous_experience?: string;
   designation?: string;
-  // employed_status?: string;
+  employed_status?: string;
   role?: string;
   department?: string;
   bank_name?: string;
@@ -51,7 +54,11 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
     reset,
     watch,
     formState: { errors },
-  } = useForm<EmployeeFormData>();
+  } = useForm<EmployeeFormData>({
+    defaultValues: {
+      employed_status: "Active",
+    },
+  });
   const uanCheckboxValue = watch("has_uan");
   const handleToggle = () => setOpen(!open);
 
@@ -127,7 +134,7 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
       overall_experience: data.overall_experience ?? "",
       previous_experience: data.previous_experience ?? "",
       designation: data.designation ?? "",
-      // employed_status: data.employed_status ?? "",
+      employed_status: data.employed_status ?? "Active",
       role: data.role ?? "",
       department: data.department ?? "",
       bank_name: data.bank_name ?? "",
@@ -360,6 +367,15 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
                     error={errors.employed_status}
                   />
                 </div> */}
+                <div className="col-span-12 md:col-span-6">
+                  <SelectBox
+                    id="employed_status"
+                    label="Employment Status"
+                    options={employeeStatusData}
+                    control={control}
+                    isRequired={true}
+                  />
+                </div>
                 <div className="col-span-12 md:col-span-6">
                   <InputField
                     label="Role"
