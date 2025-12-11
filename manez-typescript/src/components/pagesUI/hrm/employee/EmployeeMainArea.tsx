@@ -9,6 +9,7 @@ import { IEmployee } from "@/interface";
 import { StaticImageData } from "next/image";
 import avatarPlaceholder from "../../../../../public/assets/images/avatar/avatar.png";
 import EmployeeListView from "./EmployeeListView";
+import EmployeeListFilter from "./EmployeeListFilter";
 
 const EmployeeMainArea = () => {
   const [employees, setEmployees] = useState<IEmployee[]>([]);
@@ -19,6 +20,8 @@ const EmployeeMainArea = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [activeCount, setActiveCount] = useState(0);
   const [inactiveCount, setInactiveCount] = useState(0);
+  const [filterParams, setFilterParams] = useState({});
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -27,7 +30,21 @@ const EmployeeMainArea = () => {
         const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
         const token = process.env.NEXT_PUBLIC_API_TOKEN;
 
-        const response = await fetch(`${apiUrl}/employee/`, {
+        // Build query string from filter params
+        const queryParams = new URLSearchParams();
+        Object.entries(filterParams).forEach(([key, value]) => {
+          if (value) {
+            queryParams.append(key, String(value));
+          }
+        });
+
+        // Use /api/employee/filter/ endpoint when filters are applied, otherwise use /api/employee/
+        const endpoint =
+          Object.keys(filterParams).length > 0
+            ? `${apiUrl}/employee/filter/?${queryParams.toString()}`
+            : `${apiUrl}/employee/`;
+
+        const response = await fetch(endpoint, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -37,6 +54,8 @@ const EmployeeMainArea = () => {
         });
 
         if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error("API Error:", errorData);
           throw new Error("Failed to fetch employees");
         }
 
@@ -111,7 +130,7 @@ const EmployeeMainArea = () => {
     };
 
     fetchEmployees();
-  }, []);
+  }, [filterParams]);
 
   if (loading) {
     return (
@@ -160,7 +179,6 @@ const EmployeeMainArea = () => {
     <>
       <div className="app__slide-wrapper">
         <Breadcrumb breadTitle="Employee" subTitle="Home" />
-
         {/* Dashboard Cards and Add Employee Button */}
         <div className="grid grid-cols-12 gap-x-6 maxXs:gap-x-0 mb-[20px] items-end">
           <div className="col-span-12 xxl:col-span-9">
@@ -186,13 +204,16 @@ const EmployeeMainArea = () => {
             </div>
           </div>
         </div>
-
         {modalOpen && (
           <AddNewEmployeeModal open={modalOpen} setOpen={setModalOpen} />
         )}
-
+        <EmployeeListFilter
+          onFilterChange={setFilterParams}
+          isOpen={isFilterOpen}
+          onClose={() => setIsFilterOpen(false)}
+          activeFilters={filterParams}
+        />{" "}
         <EmployeeFilter />
-
         {/* View Toggle Buttons */}
         <div className="flex justify-end mb-[20px] gap-2">
           <button
@@ -216,7 +237,6 @@ const EmployeeMainArea = () => {
             <i className="fa-solid fa-list"></i>
           </button>
         </div>
-
         {employees.length === 0 ? (
           <div className="flex justify-center items-center min-h-[300px]">
             <p className="text-gray-600 dark:text-gray-400">
