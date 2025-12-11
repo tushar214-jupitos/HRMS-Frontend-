@@ -45,15 +45,27 @@ const SelectBox: React.FC<SelectBoxProps> = ({
                 MenuProps={{
                   disableScrollLock: true,
                 }}
-                renderValue={(selected) =>
-                  selected === "" ? `Select ${label}` : selected
-                }
+                renderValue={(selected) => {
+                  if (selected === "") return `Select ${label}`;
+                  const selectedOption = options.find(
+                    (opt) => opt.value === selected
+                  );
+                  return selectedOption ? selectedOption.label : selected;
+                }}
               >
-                {options.map((option, index) => (
-                  <MenuItem key={index} value={option.value} className="menu-item" >
-                    {option.value}
-                  </MenuItem>
-                ))}
+                {options && options.length > 0 ? (
+                  options.map((option, index) => (
+                    <MenuItem
+                      key={index}
+                      value={option.value}
+                      className="menu-item"
+                    >
+                      {option.label}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem disabled>No options available</MenuItem>
+                )}
               </Select>
             )}
           />
