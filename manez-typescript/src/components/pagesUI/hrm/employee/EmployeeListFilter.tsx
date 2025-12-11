@@ -1,12 +1,13 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import InputField from "@/components/elements/SharedInputs/InputField";
 import SelectBox from "@/components/elements/SharedInputs/SelectBox";
 import { useForm } from "react-hook-form";
-import {
-  employeeDesignationData,
-  employeeStatusData,
-} from "@/data/dropdown-data";
+
+interface DropdownOption {
+  value: string;
+  label: string;
+}
 
 interface FilterParams {
   search?: string;
@@ -36,13 +37,6 @@ const booleanOptions = [
   { value: "false", label: "No" },
 ];
 
-const roleOptions = [
-  { value: "employee", label: "Employee" },
-  { value: "manager", label: "Manager" },
-  { value: "admin", label: "Admin" },
-  { value: "hr", label: "HR" },
-];
-
 const orderingOptions = [
   { value: "first_name", label: "First Name (A-Z)" },
   { value: "-first_name", label: "First Name (Z-A)" },
@@ -60,6 +54,164 @@ const EmployeeListFilter = ({
 }: EmployeeListFilterProps) => {
   const { register, handleSubmit, control, reset } = useForm<FilterParams>();
   const [isExpanded, setIsExpanded] = useState(isOpen);
+
+  // Dropdown states
+  const [roles, setRoles] = useState<DropdownOption[]>([]);
+  const [departments, setDepartments] = useState<DropdownOption[]>([]);
+  const [designations, setDesignations] = useState<DropdownOption[]>([]);
+  const [reportingManagers, setReportingManagers] = useState<DropdownOption[]>(
+    []
+  );
+  const [loadingDropdowns, setLoadingDropdowns] = useState(true);
+
+  // Multiple selection states for checkboxes
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
+  const [selectedDesignations, setSelectedDesignations] = useState<string[]>(
+    []
+  );
+  const [selectedManagers, setSelectedManagers] = useState<string[]>([]);
+
+  // Dropdown open/close states
+  const [isRoleOpen, setIsRoleOpen] = useState(false);
+  const [isDepartmentOpen, setIsDepartmentOpen] = useState(false);
+  const [isDesignationOpen, setIsDesignationOpen] = useState(false);
+  const [isManagerOpen, setIsManagerOpen] = useState(false);
+
+  // Search terms for dropdown filtering
+  const [roleSearch, setRoleSearch] = useState("");
+  const [departmentSearch, setDepartmentSearch] = useState("");
+  const [designationSearch, setDesignationSearch] = useState("");
+  const [managerSearch, setManagerSearch] = useState("");
+
+  // Refs for click outside detection
+  const roleRef = useRef<HTMLDivElement>(null);
+  const departmentRef = useRef<HTMLDivElement>(null);
+  const designationRef = useRef<HTMLDivElement>(null);
+  const managerRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (roleRef.current && !roleRef.current.contains(event.target as Node)) {
+        setIsRoleOpen(false);
+      }
+      if (
+        departmentRef.current &&
+        !departmentRef.current.contains(event.target as Node)
+      ) {
+        setIsDepartmentOpen(false);
+      }
+      if (
+        designationRef.current &&
+        !designationRef.current.contains(event.target as Node)
+      ) {
+        setIsDesignationOpen(false);
+      }
+      if (
+        managerRef.current &&
+        !managerRef.current.contains(event.target as Node)
+      ) {
+        setIsManagerOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Helper function to parse dropdown data
+  const parseDropdownData = (data: any): DropdownOption[] => {
+    let items = data;
+    if (!Array.isArray(data)) {
+      if (data?.results && Array.isArray(data.results)) {
+        items = data.results;
+      } else if (data?.data && Array.isArray(data.data)) {
+        items = data.data;
+      } else {
+        return [];
+      }
+    }
+
+    return items
+      .map((item: any) => {
+        if (typeof item === "string") {
+          return { value: item, label: item };
+        } else if (typeof item === "object" && item !== null) {
+          const value = item.value || item.name || item.id || "";
+          const label =
+            item.label || item.name || item.display_name || String(value);
+          return { value, label };
+        }
+        return { value: "", label: "" };
+      })
+      .filter((item: DropdownOption) => item.value !== "");
+  };
+
+  // Fetch dropdowns from API
+  useEffect(() => {
+    const fetchDropdowns = async () => {
+      try {
+        setLoadingDropdowns(true);
+        const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+        const token = process.env.NEXT_PUBLIC_API_TOKEN;
+
+        const headers = {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        };
+
+        // Fetch all dropdowns in parallel
+        const [rolesRes, deptRes, designRes, managerRes] = await Promise.all([
+          fetch(`${apiUrl}/dropdowns/employee/roles/`, { headers }),
+          fetch(`${apiUrl}/dropdowns/departments/`, { headers }),
+          fetch(`${apiUrl}/dropdowns/designations/`, { headers }),
+          fetch(`${apiUrl}/dropdowns/employee/reporting-managers/`, {
+            headers,
+          }),
+        ]);
+
+        // Process roles
+        if (rolesRes.ok) {
+          const data = await rolesRes.json();
+          setRoles(parseDropdownData(data));
+        }
+
+        // Process departments
+        if (deptRes.ok) {
+          const data = await deptRes.json();
+          setDepartments(parseDropdownData(data));
+        }
+
+        // Process designations
+        if (designRes.ok) {
+          const data = await designRes.json();
+          setDesignations(parseDropdownData(data));
+        }
+
+        // Process reporting managers
+        if (managerRes.ok) {
+          const data = await managerRes.json();
+          const managers = (
+            Array.isArray(data) ? data : data?.results || data?.data || []
+          ).map((item: any) => ({
+            value: item.email || item.id || "",
+            label: item.email || `${item.name || ""} (${item.emp_id || ""})`,
+          }));
+          setReportingManagers(managers);
+        }
+      } catch (error) {
+        console.error("Error loading filter dropdowns:", error);
+      } finally {
+        setLoadingDropdowns(false);
+      }
+    };
+
+    fetchDropdowns();
+  }, []);
 
   // Get filter label for display
   const getFilterLabel = (key: string, value: string): string => {
@@ -83,7 +235,36 @@ const EmployeeListFilter = ({
 
   const activeFilterCount = Object.keys(activeFilters).length;
 
+  // Handle checkbox toggle
+  const handleCheckboxToggle = (
+    value: string,
+    selectedArray: string[],
+    setSelectedArray: React.Dispatch<React.SetStateAction<string[]>>
+  ) => {
+    if (selectedArray.includes(value)) {
+      setSelectedArray(selectedArray.filter((item) => item !== value));
+    } else {
+      setSelectedArray([...selectedArray, value]);
+    }
+  };
+
   const onSubmit = (data: FilterParams) => {
+    // Build filter object with checkbox selections
+    const checkboxFilters: any = {};
+
+    if (selectedRoles.length > 0) {
+      checkboxFilters.role = selectedRoles.join(",");
+    }
+    if (selectedDepartments.length > 0) {
+      checkboxFilters.department = selectedDepartments.join(",");
+    }
+    if (selectedDesignations.length > 0) {
+      checkboxFilters.designation = selectedDesignations.join(",");
+    }
+    if (selectedManagers.length > 0) {
+      checkboxFilters.reporting_manager_email = selectedManagers.join(",");
+    }
+
     // Remove empty fields from new data
     const newFilters = Object.fromEntries(
       Object.entries(data).filter(
@@ -91,10 +272,11 @@ const EmployeeListFilter = ({
       )
     );
 
-    // Merge new filters with existing active filters
+    // Merge all filters
     const mergedFilters = {
       ...activeFilters,
       ...newFilters,
+      ...checkboxFilters,
     };
 
     onFilterChange(mergedFilters);
@@ -102,12 +284,34 @@ const EmployeeListFilter = ({
 
   const handleReset = () => {
     reset();
+    setSelectedRoles([]);
+    setSelectedDepartments([]);
+    setSelectedDesignations([]);
+    setSelectedManagers([]);
+    setRoleSearch("");
+    setDepartmentSearch("");
+    setDesignationSearch("");
+    setManagerSearch("");
     onFilterChange({});
   };
 
   const toggleFilter = () => {
     setIsExpanded(!isExpanded);
   };
+
+  // Filtered option lists based on search inputs
+  const filteredRoles = roles.filter((option) =>
+    option.label.toLowerCase().includes(roleSearch.toLowerCase())
+  );
+  const filteredDepartments = departments.filter((option) =>
+    option.label.toLowerCase().includes(departmentSearch.toLowerCase())
+  );
+  const filteredDesignations = designations.filter((option) =>
+    option.label.toLowerCase().includes(designationSearch.toLowerCase())
+  );
+  const filteredManagers = reportingManagers.filter((option) =>
+    option.label.toLowerCase().includes(managerSearch.toLowerCase())
+  );
 
   return (
     <div className="card__wrapper mb-[20px]">
@@ -182,44 +386,280 @@ const EmployeeListFilter = ({
               />
             </div>
 
-            {/* Role - Multiple values */}
-            <div className="col-span-12 md:col-span-6 lg:col-span-3">
-              <SelectBox
-                id="role"
-                label="Role"
-                options={roleOptions}
-                control={control}
-              />
+            {/* Role - Multiple checkboxes dropdown */}
+            <div
+              className="col-span-12 md:col-span-6 lg:col-span-3 relative"
+              ref={roleRef}
+            >
+              <label className="form-label mb-2 block">Role</label>
+              <div
+                className="border border-gray-300 dark:border-gray-600 rounded-md p-2 cursor-pointer bg-white dark:bg-gray-800"
+                onClick={() => setIsRoleOpen(!isRoleOpen)}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    {selectedRoles.length > 0
+                      ? `${selectedRoles.length} selected`
+                      : "Select roles"}
+                  </span>
+                  <i
+                    className={`fa-solid fa-chevron-${
+                      isRoleOpen ? "up" : "down"
+                    } text-sm`}
+                  ></i>
+                </div>
+              </div>
+              {isRoleOpen && (
+                <div className="absolute z-10 mt-1 w-full border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 shadow-lg">
+                  <div
+                    className="p-2 border-b border-gray-200 dark:border-gray-700"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <input
+                      type="text"
+                      value={roleSearch}
+                      onChange={(e) => setRoleSearch(e.target.value)}
+                      placeholder="Search roles"
+                      className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1 text-sm focus:outline-none"
+                    />
+                  </div>
+                  <div className="max-h-56 overflow-y-auto">
+                    {filteredRoles.map((role) => (
+                      <label
+                        key={role.value}
+                        className="flex items-center gap-2 py-2 px-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedRoles.includes(role.value)}
+                          onChange={() =>
+                            handleCheckboxToggle(
+                              role.value,
+                              selectedRoles,
+                              setSelectedRoles
+                            )
+                          }
+                          className="form-checkbox"
+                        />
+                        <span className="text-sm">{role.label}</span>
+                      </label>
+                    ))}
+                    {filteredRoles.length === 0 && (
+                      <div className="py-3 px-3 text-sm text-gray-500 dark:text-gray-400">
+                        No roles found
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Department - Multiple values */}
-            <div className="col-span-12 md:col-span-6 lg:col-span-3">
-              <InputField
-                label="Department"
-                id="department"
-                type="text"
-                register={register("department")}
-              />
+            {/* Department - Multiple checkboxes dropdown */}
+            <div
+              className="col-span-12 md:col-span-6 lg:col-span-3 relative"
+              ref={departmentRef}
+            >
+              <label className="form-label mb-2 block">Department</label>
+              <div
+                className="border border-gray-300 dark:border-gray-600 rounded-md p-2 cursor-pointer bg-white dark:bg-gray-800"
+                onClick={() => setIsDepartmentOpen(!isDepartmentOpen)}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    {selectedDepartments.length > 0
+                      ? `${selectedDepartments.length} selected`
+                      : "Select departments"}
+                  </span>
+                  <i
+                    className={`fa-solid fa-chevron-${
+                      isDepartmentOpen ? "up" : "down"
+                    } text-sm`}
+                  ></i>
+                </div>
+              </div>
+              {isDepartmentOpen && (
+                <div className="absolute z-10 mt-1 w-full border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 shadow-lg">
+                  <div
+                    className="p-2 border-b border-gray-200 dark:border-gray-700"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <input
+                      type="text"
+                      value={departmentSearch}
+                      onChange={(e) => setDepartmentSearch(e.target.value)}
+                      placeholder="Search departments"
+                      className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1 text-sm focus:outline-none"
+                    />
+                  </div>
+                  <div className="max-h-56 overflow-y-auto">
+                    {filteredDepartments.map((dept) => (
+                      <label
+                        key={dept.value}
+                        className="flex items-center gap-2 py-2 px-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedDepartments.includes(dept.value)}
+                          onChange={() =>
+                            handleCheckboxToggle(
+                              dept.value,
+                              selectedDepartments,
+                              setSelectedDepartments
+                            )
+                          }
+                          className="form-checkbox"
+                        />
+                        <span className="text-sm">{dept.label}</span>
+                      </label>
+                    ))}
+                    {filteredDepartments.length === 0 && (
+                      <div className="py-3 px-3 text-sm text-gray-500 dark:text-gray-400">
+                        No departments found
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Designation - Multiple values */}
-            <div className="col-span-12 md:col-span-6 lg:col-span-3">
-              <InputField
-                label="Designation"
-                id="designation"
-                type="text"
-                register={register("designation")}
-              />
+            {/* Designation - Multiple checkboxes dropdown */}
+            <div
+              className="col-span-12 md:col-span-6 lg:col-span-3 relative"
+              ref={designationRef}
+            >
+              <label className="form-label mb-2 block">Designation</label>
+              <div
+                className="border border-gray-300 dark:border-gray-600 rounded-md p-2 cursor-pointer bg-white dark:bg-gray-800"
+                onClick={() => setIsDesignationOpen(!isDesignationOpen)}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    {selectedDesignations.length > 0
+                      ? `${selectedDesignations.length} selected`
+                      : "Select designations"}
+                  </span>
+                  <i
+                    className={`fa-solid fa-chevron-${
+                      isDesignationOpen ? "up" : "down"
+                    } text-sm`}
+                  ></i>
+                </div>
+              </div>
+              {isDesignationOpen && (
+                <div className="absolute z-10 mt-1 w-full border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 shadow-lg">
+                  <div
+                    className="p-2 border-b border-gray-200 dark:border-gray-700"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <input
+                      type="text"
+                      value={designationSearch}
+                      onChange={(e) => setDesignationSearch(e.target.value)}
+                      placeholder="Search designations"
+                      className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1 text-sm focus:outline-none"
+                    />
+                  </div>
+                  <div className="max-h-56 overflow-y-auto">
+                    {filteredDesignations.map((desig) => (
+                      <label
+                        key={desig.value}
+                        className="flex items-center gap-2 py-2 px-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedDesignations.includes(desig.value)}
+                          onChange={() =>
+                            handleCheckboxToggle(
+                              desig.value,
+                              selectedDesignations,
+                              setSelectedDesignations
+                            )
+                          }
+                          className="form-checkbox"
+                        />
+                        <span className="text-sm">{desig.label}</span>
+                      </label>
+                    ))}
+                    {filteredDesignations.length === 0 && (
+                      <div className="py-3 px-3 text-sm text-gray-500 dark:text-gray-400">
+                        No designations found
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Reporting Manager Email */}
-            <div className="col-span-12 md:col-span-6 lg:col-span-3">
-              <InputField
-                label="Reporting Manager (Email)"
-                id="reporting_manager_email"
-                type="text"
-                register={register("reporting_manager_email")}
-              />
+            {/* Reporting Manager - Multiple checkboxes dropdown */}
+            <div
+              className="col-span-12 md:col-span-6 lg:col-span-3 relative"
+              ref={managerRef}
+            >
+              <label className="form-label mb-2 block">Reporting Manager</label>
+              <div
+                className="border border-gray-300 dark:border-gray-600 rounded-md p-2 cursor-pointer bg-white dark:bg-gray-800"
+                onClick={() => setIsManagerOpen(!isManagerOpen)}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    {selectedManagers.length > 0
+                      ? `${selectedManagers.length} selected`
+                      : "Select managers"}
+                  </span>
+                  <i
+                    className={`fa-solid fa-chevron-${
+                      isManagerOpen ? "up" : "down"
+                    } text-sm`}
+                  ></i>
+                </div>
+              </div>
+              {isManagerOpen && (
+                <div className="absolute z-10 mt-1 w-full border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 shadow-lg">
+                  <div
+                    className="p-2 border-b border-gray-200 dark:border-gray-700"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <input
+                      type="text"
+                      value={managerSearch}
+                      onChange={(e) => setManagerSearch(e.target.value)}
+                      placeholder="Search managers"
+                      className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1 text-sm focus:outline-none"
+                    />
+                  </div>
+                  <div className="max-h-56 overflow-y-auto">
+                    {filteredManagers.map((manager) => (
+                      <label
+                        key={manager.value}
+                        className="flex items-center gap-2 py-2 px-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedManagers.includes(manager.value)}
+                          onChange={() =>
+                            handleCheckboxToggle(
+                              manager.value,
+                              selectedManagers,
+                              setSelectedManagers
+                            )
+                          }
+                          className="form-checkbox"
+                        />
+                        <span className="text-sm">{manager.label}</span>
+                      </label>
+                    ))}
+                    {filteredManagers.length === 0 && (
+                      <div className="py-3 px-3 text-sm text-gray-500 dark:text-gray-400">
+                        No managers found
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Minimum Overall Experience */}
