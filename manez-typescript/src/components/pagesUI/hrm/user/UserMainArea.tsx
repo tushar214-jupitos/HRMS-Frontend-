@@ -21,7 +21,7 @@ const UserMainArea = () => {
             : fallbackToken;
 
         const response = await fetch(
-          "https://cichoriaceous-kristeen-unnormally.ngrok-free.dev/api/users/list",
+          "https://astrologically-smashable-paxton.ngrok-free.dev/api/users/list",
           {
             method: "GET",
             headers: {

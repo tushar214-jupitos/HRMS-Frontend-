@@ -7,10 +7,12 @@ import Link from "next/link";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 const SignInBasicForm = () => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const {
     register,
@@ -30,10 +32,13 @@ const SignInBasicForm = () => {
 
     try {
       const res = await fetch(
-        " https://cichoriaceous-kristeen-unnormally.ngrok-free.dev/api/users/login/",
+        "https://astrologically-smashable-paxton.ngrok-free.dev/api/users/login/",
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "true",
+          },
           body: JSON.stringify(payload),
         }
       );
@@ -46,27 +51,25 @@ const SignInBasicForm = () => {
         return;
       }
 
-      // ===== Extract token from backend response =====
-      const tokenValue = result.access; // backend returns 'access'
-      if (!tokenValue) {
-        toast.error("Token not found in login response");
+      // ===== Validate token existence =====
+      if (!result.access || !result.refresh) {
+        toast.error("Token missing in server response");
         return;
       }
 
-      // ===== Store token for API calls =====
-      localStorage.setItem("accessToken", tokenValue);
-      sessionStorage.setItem("accessToken", tokenValue); // optional
+      // ===== Save tokens =====
+      localStorage.setItem("accessToken", result.access);
+      localStorage.setItem("refreshToken", result.refresh);
 
-      // ===== Optional: store user info =====
+      // ===== Save user =====
       if (result.user) {
         localStorage.setItem("user", JSON.stringify(result.user));
-        //localStorage.setItem("access", data.access);
       }
 
       toast.success("Login successful");
 
-      // ===== Redirect to home/dashboard =====
-      window.location.href = "/";
+      // ===== Redirect =====
+      router.push("/");
     } catch (error) {
       console.error("Login error:", error);
       toast.error("Something went wrong!");
@@ -91,8 +94,10 @@ const SignInBasicForm = () => {
             className="form-control"
             id="nameEmail"
             type="text"
-            defaultValue="admin"
-            {...register("name", { required: "Email or Username is required" })}
+            defaultValue=""
+            {...register("name", {
+              required: "Email or Username is required",
+            })}
           />
           <ErrorMessage error={errors.name} />
         </div>
@@ -102,7 +107,7 @@ const SignInBasicForm = () => {
       <div className="from__input-box">
         <div className="form__input-title flex justify-between">
           <label htmlFor="passwordInput">Password</label>
-          <Link href="/auth/auth-forgot-password-basic">
+          <Link href="/reset-password" className="text-sm text-primary">
             <small>Forgot Password?</small>
           </Link>
         </div>
@@ -111,13 +116,13 @@ const SignInBasicForm = () => {
             className="form-control"
             type={isPasswordVisible ? "text" : "password"}
             id="passwordInput"
-            defaultValue="admin"
+            defaultValue=""
             {...register("password", { required: "Password is required" })}
           />
           <ErrorMessage error={errors.password} />
           <div className="pass-icon" onClick={togglePasswordVisibility}>
             <i
-              className={`fa-sharp fa-light ${
+              className={`fa-solid ${
                 isPasswordVisible ? "fa-eye" : "fa-eye-slash"
               }`}
             ></i>

@@ -4,7 +4,7 @@ import AddNewUser from  "./AddNewUser"
 import { FormControl, MenuItem, Select, SelectChangeEvent } from "@mui/material";
 import { employeeDesignationData } from "@/data/dropdown-data";
 
-const EmployeeFilter = () => {
+const UserFilter = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState<string>("");
   const handleSelectChange = (event: SelectChangeEvent<string>) => {
@@ -88,4 +88,4 @@ const EmployeeFilter = () => {
   );
 };
 
-export default EmployeeFilter
+export default UserFilter;

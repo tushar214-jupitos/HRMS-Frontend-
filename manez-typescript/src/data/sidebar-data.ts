@@ -51,6 +51,7 @@ const sidebarData: SidebarCategory[] = [
           { label: "CRM Setup", link: "/crm/crm-setup" },
         ],
       },
+
       {
         id: 4,
         label: "Apps",
@@ -433,5 +434,9 @@ const sidebarData: SidebarCategory[] = [
     ],
   },
 ];
+
+
+
+
 
 export default sidebarData;

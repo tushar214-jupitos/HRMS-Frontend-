@@ -28,7 +28,7 @@ const SignUpBasicForm = () => {
       };
 
       const res = await fetch(
-        "https://cichoriaceous-kristeen-unnormally.ngrok-free.dev/api/users/register/",
+        "https://astrologically-smashable-paxton.ngrok-free.dev/api/users/register/",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

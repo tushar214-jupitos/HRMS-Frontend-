@@ -59,7 +59,7 @@ const HeaderUserProfile = ({
         }
 
         const res = await fetch(
-          "https://cichoriaceous-kristeen-unnormally.ngrok-free.dev/api/users/me",
+          "https://astrologically-smashable-paxton.ngrok-free.dev/api/users/me",
           {
             method: "GET",
             headers: {
