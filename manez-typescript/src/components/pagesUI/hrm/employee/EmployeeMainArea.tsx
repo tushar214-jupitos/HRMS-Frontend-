@@ -22,6 +22,7 @@ const EmployeeMainArea = () => {
   const [inactiveCount, setInactiveCount] = useState(0);
   const [filterParams, setFilterParams] = useState({});
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -132,6 +133,76 @@ const EmployeeMainArea = () => {
     fetchEmployees();
   }, [filterParams]);
 
+  const handleExportExcel = async () => {
+    try {
+      setExportLoading(true);
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const token = process.env.NEXT_PUBLIC_API_TOKEN;
+
+      const queryParams = new URLSearchParams();
+      Object.entries(filterParams).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          if (Array.isArray(value)) {
+            value.forEach((v) => queryParams.append(key, String(v)));
+          } else {
+            queryParams.append(key, String(value));
+          }
+        }
+      });
+
+      const queryString = queryParams.toString();
+      const endpoints = [
+        `${apiUrl}/employee/export/`,
+        `${apiUrl}/employee/export-excel/`,
+        `${apiUrl}/employee/export_excel/`,
+        `${apiUrl}/employee/export-excel`,
+        `${apiUrl}/employee/export_excel`,
+      ].map((base) => (queryString ? `${base}?${queryString}` : base));
+
+      let lastError: string | null = null;
+      for (const endpoint of endpoints) {
+        const response = await fetch(endpoint, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+            Accept: "*/*",
+          },
+        });
+
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          const today = new Date().toISOString().slice(0, 10);
+          link.download = `employee_export_${today}.xlsx`;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          window.URL.revokeObjectURL(url);
+          return;
+        }
+
+        if (response.status === 404) {
+          lastError = "Endpoint not found";
+          continue; // try next endpoint variant
+        }
+
+        const errorText = await response.text().catch(() => "");
+        lastError = errorText || `Export failed with status ${response.status}`;
+        break; // stop on non-404 errors
+      }
+
+      throw new Error(lastError || "Failed to export Excel");
+    } catch (err) {
+      console.error("Export Excel failed:", err);
+      alert("Failed to export Excel.");
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="app__slide-wrapper">
@@ -214,28 +285,45 @@ const EmployeeMainArea = () => {
           activeFilters={filterParams}
         />{" "}
         <EmployeeFilter />
-        {/* View Toggle Buttons */}
-        <div className="flex justify-end mb-[20px] gap-2">
+        {/* Export and View Toggle Buttons */}
+        <div className="flex flex-wrap items-center justify-between mb-[20px] gap-3">
           <button
             type="button"
-            className={`btn ${
-              viewMode === "card" ? "btn-primary" : "btn-outline-primary"
-            }`}
-            onClick={() => setViewMode("card")}
-            title="Card View"
+            className="flex items-center gap-2 px-3 py-1 bg-green-600 text-white rounded-full shadow-sm hover:bg-green-700 transition-all text-sm font-medium disabled:opacity-50"
+            onClick={handleExportExcel}
+            disabled={exportLoading}
           >
-            <i className="fa-solid fa-grid-2"></i>
+            {exportLoading ? (
+              <>
+                <i className="fa-solid fa-spinner fa-spin"></i> Exporting...
+              </>
+            ) : (
+              <>📊 Export Excel</>
+            )}
           </button>
-          <button
-            type="button"
-            className={`btn ${
-              viewMode === "list" ? "btn-primary" : "btn-outline-primary"
-            }`}
-            onClick={() => setViewMode("list")}
-            title="List View"
-          >
-            <i className="fa-solid fa-list"></i>
-          </button>
+
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              className={`btn ${
+                viewMode === "card" ? "btn-primary" : "btn-outline-primary"
+              }`}
+              onClick={() => setViewMode("card")}
+              title="Card View"
+            >
+              <i className="fa-solid fa-grid-2"></i>
+            </button>
+            <button
+              type="button"
+              className={`btn ${
+                viewMode === "list" ? "btn-primary" : "btn-outline-primary"
+              }`}
+              onClick={() => setViewMode("list")}
+              title="List View"
+            >
+              <i className="fa-solid fa-list"></i>
+            </button>
+          </div>
         </div>
         {employees.length === 0 ? (
           <div className="flex justify-center items-center min-h-[300px]">
