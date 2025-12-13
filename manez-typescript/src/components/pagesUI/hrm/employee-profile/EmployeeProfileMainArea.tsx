@@ -25,7 +25,8 @@ const EmployeeProfileMainArea = ({ id }: idType) => {
         setLoading(true);
         const base =
           process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") || "";
-        const token = process.env.NEXT_PUBLIC_API_TOKEN;
+        const token = localStorage.getItem("accessToken");
+        //  sessionStorage.getItem("accessToken");
         if (!base) {
           throw new Error("API base URL is not configured");
         }

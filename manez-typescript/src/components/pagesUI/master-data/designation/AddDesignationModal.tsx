@@ -26,7 +26,7 @@ const AddDesignationModal = ({ open, setOpen }: statePropsType) => {
         return;
       }
 
-      const res = await fetch(`${API_BASE_URL}/api/master/designations/`, {
+      const res = await fetch(`${API_BASE_URL}/master/designations/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -50,7 +50,9 @@ const AddDesignationModal = ({ open, setOpen }: statePropsType) => {
         window.location.reload();
       }
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.message || "Failed to add designation. Please try again.";
+      const errorMessage =
+        error?.response?.data?.message ||
+        "Failed to add designation. Please try again.";
       toast.error(errorMessage);
     }
   };

@@ -23,11 +23,15 @@ export default function ResetPasswordConfirmPage() {
 
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users/password-reset-confirm/`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/password-reset-confirm/`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ new_password: password, uid: uid, token: token }),
+          body: JSON.stringify({
+            new_password: password,
+            uid: uid,
+            token: token,
+          }),
         }
       );
 

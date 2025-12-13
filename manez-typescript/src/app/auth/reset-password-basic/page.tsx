@@ -12,7 +12,7 @@ export default function RequestResetPasswordPage() {
 
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users/password-reset/`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/password-reset/`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

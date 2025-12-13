@@ -28,7 +28,7 @@ const AfterLoginPasswordReset = () => {
     setLoading(true);
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users/after-login-password-reset/request/`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/after-login-password-reset/request/`,
         {
           method: "POST",
           headers: {
@@ -59,7 +59,7 @@ const AfterLoginPasswordReset = () => {
     setLoading(true);
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users/after-login-password-reset/verify-otp/`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/after-login-password-reset/verify-otp/`,
         {
           method: "POST",
           headers: {
@@ -95,7 +95,7 @@ const AfterLoginPasswordReset = () => {
     setLoading(true);
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users/after-login-password-reset/reset/`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/after-login-password-reset/reset/`,
         {
           method: "POST",
           headers: {

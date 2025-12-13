@@ -27,6 +27,7 @@ import useMaterialTableHook from "@/hooks/useMaterialTableHook";
 import TableControls from "@/components/elements/SharedInputs/TableControls";
 import EditEmployeeModal from "./EditEmployeeModal";
 import { useTableStatusHook } from "@/hooks/use-condition-class";
+import { toast } from "sonner";
 
 interface EmployeeListViewProps {
   employees: IEmployee[];
@@ -94,9 +95,14 @@ const EmployeeListView = ({
     if (!employeeToDelete) return;
 
     try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        toast.error("Unauthorized! Please login again.");
+        return;
+      }
+
       setDeleting(true);
       const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-      const token = process.env.NEXT_PUBLIC_API_TOKEN;
 
       const response = await fetch(
         `${apiUrl}/employee/${employeeToDelete.id}/`,
@@ -221,12 +227,21 @@ const EmployeeListView = ({
                 <TableBody className="table__body">
                   {paginatedRows.map((employee, index) => {
                     const isItemSelected = selected.includes(index);
-                    const statusClass = useTableStatusHook(
+                    // Move hook call outside of callback by using a helper function or computed value
+                    const getStatusClass = (status: string) => {
+                      // Simple status class logic without using hook
+                      return status === "active"
+                        ? "text-green-600"
+                        : "text-red-600";
+                    };
+                    const statusClass = getStatusClass(
                       (employee as any).employed_status
                     );
+
                     return (
                       <TableRow
                         key={employee.id || index}
+                        className={`table__row ${statusClass}`}
                         selected={isItemSelected}
                         onClick={() => handleClick(index)}
                       >

@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import InputField from "@/components/elements/SharedInputs/InputField";
 import SelectBox from "@/components/elements/SharedInputs/SelectBox";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 interface DropdownOption {
   value: string;
@@ -154,9 +155,14 @@ const EmployeeListFilter = ({
   useEffect(() => {
     const fetchDropdowns = async () => {
       try {
+        const token = localStorage.getItem("accessToken");
+        if (!token) {
+          toast.error("Unauthorized! Please login again.");
+          return;
+        }
+
         setLoadingDropdowns(true);
         const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-        const token = process.env.NEXT_PUBLIC_API_TOKEN;
 
         const headers = {
           "Content-Type": "application/json",

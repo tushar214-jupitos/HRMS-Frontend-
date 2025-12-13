@@ -160,9 +160,14 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
   useEffect(() => {
     const fetchDropdowns = async () => {
       try {
+        const token = localStorage.getItem("accessToken");
+        if (!token) {
+          toast.error("Unauthorized! Please login again.");
+          return;
+        }
+
         setLoadingDropdowns(true);
         const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-        const token = process.env.NEXT_PUBLIC_API_TOKEN;
 
         const headers = {
           "Content-Type": "application/json",
@@ -311,7 +316,7 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
               const result = {
                 value: item,
                 label: item,
-                id: item, // Use email as ID since no separate ID provided
+                // id is optional in DropdownOption interface, so we can omit it for string items
               } as DropdownOption;
               console.log("=== String mapped to ===", result);
               return result;
@@ -441,10 +446,15 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
     };
 
     try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        toast.error("Unauthorized! Please login again.");
+        return;
+      }
+
       setIsSubmitting(true);
 
       const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/employee/`;
-      const token = process.env.NEXT_PUBLIC_API_TOKEN;
 
       const response = await fetch(apiUrl, {
         method: "POST",

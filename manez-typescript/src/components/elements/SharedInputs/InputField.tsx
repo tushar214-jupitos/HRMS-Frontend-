@@ -14,6 +14,7 @@ interface InputFieldProps {
   isTextArea?: boolean;
   defaultValue?: string | number;
   placeholder?: string;
+  disabled?: boolean;
 }
 
 const InputField: React.FC<InputFieldProps> = ({
@@ -27,6 +28,8 @@ const InputField: React.FC<InputFieldProps> = ({
   groupInput = false,
   isTextArea = false,
   defaultValue = "",
+  placeholder,
+  disabled = false,
 }) => {
   return (
     <div className="form__input-box">
@@ -46,10 +49,15 @@ const InputField: React.FC<InputFieldProps> = ({
                     id={id}
                     type={type}
                     defaultValue={defaultValue} // Set the default value
+                    disabled={disabled}
                     {...(register ? register : {})}
                   />
                 </div>
-                {error && <ErrorMessage error={typeof error === 'string' ? error : error.message} />}
+                {error && (
+                  <ErrorMessage
+                    error={typeof error === "string" ? error : error.message}
+                  />
+                )}
               </>
             ) : (
               <>
@@ -60,10 +68,15 @@ const InputField: React.FC<InputFieldProps> = ({
                     id={id}
                     type={type}
                     defaultValue={defaultValue} // Set the default value
+                    disabled={disabled}
                     {...(register ? register : {})}
                   />
                 </div>
-                {error && <ErrorMessage error={typeof error === 'string' ? error : error.message} />}
+                {error && (
+                  <ErrorMessage
+                    error={typeof error === "string" ? error : error.message}
+                  />
+                )}
               </>
             )}
           </>
@@ -77,7 +90,11 @@ const InputField: React.FC<InputFieldProps> = ({
                 {...(register ? register : {})}
               ></textarea>
             </div>
-            {error && <ErrorMessage error={typeof error === 'string' ? error : error.message} />}
+            {error && (
+              <ErrorMessage
+                error={typeof error === "string" ? error : error.message}
+              />
+            )}
           </>
         )}
       </>

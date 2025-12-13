@@ -12,9 +12,17 @@ interface UpdateModalProps {
   editData: IDepartment;
 }
 
-const DepartmentUpdateModal = ({ open, setOpen, editData }: UpdateModalProps) => {
-  const { register, handleSubmit, formState: { errors } } = useForm<IDepartment>({
-    defaultValues: editData
+const DepartmentUpdateModal = ({
+  open,
+  setOpen,
+  editData,
+}: UpdateModalProps) => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<IDepartment>({
+    defaultValues: editData,
   });
   const handleToggle = () => setOpen(!open);
 
@@ -28,7 +36,7 @@ const DepartmentUpdateModal = ({ open, setOpen, editData }: UpdateModalProps) =>
       }
 
       const res = await fetch(
-        `${API_BASE_URL}/api/master/departments/${data.id}/`,
+        `${API_BASE_URL}/master/departments/${data.id}/`,
         {
           method: "PUT",
           headers: {
@@ -70,7 +78,9 @@ const DepartmentUpdateModal = ({ open, setOpen, editData }: UpdateModalProps) =>
             label="Department Name"
             id="name"
             type="text"
-            register={register("name", { required: "Department name is required" })}
+            register={register("name", {
+              required: "Department name is required",
+            })}
             error={errors.name}
           />
           <InputField

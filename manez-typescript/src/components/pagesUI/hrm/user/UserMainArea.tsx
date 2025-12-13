@@ -22,7 +22,7 @@ const UserMainArea = () => {
             ? localStorage.getItem("accessToken") || fallbackToken
             : fallbackToken;
 
-        const res = await fetch(`${API_BASE_URL}/api/users/list`, {
+        const res = await fetch(`${API_BASE_URL}/users/list`, {
           method: "GET",
           headers: {
             "ngrok-skip-browser-warning": "true",

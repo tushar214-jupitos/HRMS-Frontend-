@@ -32,7 +32,7 @@ const SignInBasicForm = () => {
 
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users/login/`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/login/`,
         {
           method: "POST",
           headers: {

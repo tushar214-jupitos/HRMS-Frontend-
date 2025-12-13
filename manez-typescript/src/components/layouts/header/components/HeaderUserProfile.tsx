@@ -59,7 +59,7 @@ const HeaderUserProfile = ({
         }
 
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users/me`,
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me`,
           {
             method: "GET",
             headers: {

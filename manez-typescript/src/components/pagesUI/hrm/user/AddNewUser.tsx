@@ -50,7 +50,7 @@ const AddNewUser = ({ open, setOpen }: statePropsType) => {
         };
 
         const rolesRes = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/dropdowns/user/roles/`,
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/dropdowns/user/roles/`,
           {
             method: "GET",
             headers: {
@@ -62,7 +62,7 @@ const AddNewUser = ({ open, setOpen }: statePropsType) => {
         );
 
         const departmentsRes = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/dropdowns/user/departments/`,
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/dropdowns/user/departments/`,
           {
             method: "GET",
             headers: {
@@ -104,7 +104,7 @@ const AddNewUser = ({ open, setOpen }: statePropsType) => {
       }
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users/register/`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/register/`,
         {
           method: "POST",
           headers: {
@@ -234,8 +234,6 @@ const AddNewUser = ({ open, setOpen }: statePropsType) => {
                 </p>
               )}
             </div>
-
-    
 
             {/* Department Dropdown */}
             <div className="col-span-12 md:col-span-6">

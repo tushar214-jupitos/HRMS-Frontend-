@@ -71,7 +71,7 @@ const DesignationTable = () => {
           return;
         }
 
-        const res = await fetch(`${API_BASE_URL}/api/master/designations/`, {
+        const res = await fetch(`${API_BASE_URL}/master/designations/`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -116,7 +116,7 @@ const DesignationTable = () => {
         return;
       }
 
-      const res = await fetch(`${API_BASE_URL}/api/master/designations/${id}/`, {
+      const res = await fetch(`${API_BASE_URL}/master/designations/${id}/`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -149,7 +149,10 @@ const DesignationTable = () => {
           <Box sx={{ width: "100%" }} className="table-responsive">
             <Paper sx={{ width: "100%", mb: 2 }}>
               <TableContainer className="table mb-[20px] hover multiple_tables w-full">
-                <Table aria-labelledby="tableTitle" className="whitespace-nowrap">
+                <Table
+                  aria-labelledby="tableTitle"
+                  className="whitespace-nowrap"
+                >
                   <TableHead>
                     <TableRow className="table__title">
                       {headCells.map((headCell) => (

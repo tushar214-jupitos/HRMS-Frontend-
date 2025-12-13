@@ -11,10 +11,7 @@ import TableRow from "@mui/material/TableRow";
 import TableSortLabel from "@mui/material/TableSortLabel";
 import Paper from "@mui/material/Paper";
 import { visuallyHidden } from "@mui/utils";
-import {
-  departmentData,
-  IDepartment,
-} from "@/data/master-data/departmentData";
+import { departmentData, IDepartment } from "@/data/master-data/departmentData";
 import useMaterialTableHook from "@/hooks/useMaterialTableHook";
 import DepartmentUpdateModal from "./DepartmentUpdateModal";
 import TableControls from "@/components/elements/SharedInputs/TableControls";
@@ -75,7 +72,7 @@ const DepartmentTable = () => {
           return;
         }
 
-        const res = await fetch(`${API_BASE_URL}/api/master/departments/`, {
+        const res = await fetch(`${API_BASE_URL}/master/departments/`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -120,26 +117,21 @@ const DepartmentTable = () => {
         return;
       }
 
-      const res = await fetch(
-        `${API_BASE_URL}/api/master/departments/${id}/`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "true",
-          },
-        }
-      );
+      const res = await fetch(`${API_BASE_URL}/master/departments/${id}/`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
 
       if (!res.ok) {
         setError("Failed to delete department");
         return;
       }
 
-      setRows((prev: IDepartment[]) =>
-        prev.filter((row) => row.id !== id)
-      );
+      setRows((prev: IDepartment[]) => prev.filter((row) => row.id !== id));
     } catch {
       setError("Failed to delete department");
     }
@@ -158,14 +150,19 @@ const DepartmentTable = () => {
           <Box sx={{ width: "100%" }} className="table-responsive">
             <Paper sx={{ width: "100%", mb: 2 }}>
               <TableContainer className="table mb-[20px] hover multiple_tables w-full">
-                <Table aria-labelledby="tableTitle" className="whitespace-nowrap">
+                <Table
+                  aria-labelledby="tableTitle"
+                  className="whitespace-nowrap"
+                >
                   <TableHead>
                     <TableRow className="table__title">
                       {headCells.map((headCell) => (
                         <TableCell
                           className="table__title"
                           key={headCell.id}
-                          sortDirection={orderBy === headCell.id ? order : false}
+                          sortDirection={
+                            orderBy === headCell.id ? order : false
+                          }
                         >
                           <TableSortLabel
                             active={orderBy === headCell.id}

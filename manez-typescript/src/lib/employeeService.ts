@@ -4,12 +4,18 @@
  */
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-const API_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
 
-const baseHeaders = {
-  "Content-Type": "application/json",
-  Authorization: `Bearer ${API_TOKEN}`,
-  "ngrok-skip-browser-warning": "true",
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("accessToken");
+  if (!token) {
+    throw new Error("Unauthorized! Please login again.");
+  }
+  
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+    "ngrok-skip-browser-warning": "true",
+  };
 };
 
 const throwIfNotOk = async (response: Response, fallback = "Request failed") => {
@@ -28,7 +34,7 @@ export const linkUserToEmployee = async (
 ) => {
   const response = await fetch(`${API_BASE_URL}/employee/${employeeId}/link-user/`, {
     method: "POST",
-    headers: baseHeaders,
+    headers: getAuthHeaders(),
     body: JSON.stringify({ user_id: userId }),
   });
   await throwIfNotOk(response, "Failed to link user to employee");
@@ -38,7 +44,7 @@ export const linkUserToEmployee = async (
 export const unlinkUserFromEmployee = async (employeeId: string | number) => {
   const response = await fetch(`${API_BASE_URL}/employee/${employeeId}/unlink-user/`, {
     method: "POST",
-    headers: baseHeaders,
+    headers: getAuthHeaders(),
   });
   await throwIfNotOk(response, "Failed to unlink user from employee");
   return response.json();
@@ -47,7 +53,7 @@ export const unlinkUserFromEmployee = async (employeeId: string | number) => {
 export const getUserEmails = async () => {
   const response = await fetch(`${API_BASE_URL}/dropdowns/user/emails/`, {
     method: "GET",
-    headers: baseHeaders,
+    headers: getAuthHeaders(),
   });
   await throwIfNotOk(response, "Failed to fetch user emails");
   return response.json();

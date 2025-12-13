@@ -13,8 +13,16 @@ interface UpdateModalProps {
   editData: IEmploymentType;
 }
 
-const EmploymentTypeUpdateModal = ({ open, setOpen, editData }: UpdateModalProps) => {
-  const { register, handleSubmit, formState: { errors } } = useForm<IEmploymentType>({ defaultValues: editData });
+const EmploymentTypeUpdateModal = ({
+  open,
+  setOpen,
+  editData,
+}: UpdateModalProps) => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<IEmploymentType>({ defaultValues: editData });
   const handleToggle = () => setOpen(!open);
 
   const onSubmit = async (data: IEmploymentType) => {
@@ -25,18 +33,21 @@ const EmploymentTypeUpdateModal = ({ open, setOpen, editData }: UpdateModalProps
         return;
       }
 
-      const res = await fetch(`${API_BASE_URL}/api/master/employment-types/${data.id}/`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-          "ngrok-skip-browser-warning": "true",
-        },
-        body: JSON.stringify({
-          name: data.name,
-          description: data.description,
-        }),
-      });
+      const res = await fetch(
+        `${API_BASE_URL}/master/employment-types/${data.id}/`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+          body: JSON.stringify({
+            name: data.name,
+            description: data.description,
+          }),
+        }
+      );
 
       if (!res.ok) {
         toast.error("Failed to update employment type. Please try again.");
@@ -49,13 +60,21 @@ const EmploymentTypeUpdateModal = ({ open, setOpen, editData }: UpdateModalProps
         window.location.reload();
       }
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.message || "Failed to update employment type. Please try again.";
+      const errorMessage =
+        error?.response?.data?.message ||
+        "Failed to update employment type. Please try again.";
       toast.error(errorMessage);
     }
   };
 
   return (
-    <Dialog open={open} onClose={handleToggle} fullWidth maxWidth="sm" sx={{"& .MuiDialog-paper": { width: "500px" }}}>
+    <Dialog
+      open={open}
+      onClose={handleToggle}
+      fullWidth
+      maxWidth="sm"
+      sx={{ "& .MuiDialog-paper": { width: "500px" } }}
+    >
       <DialogTitle>
         <div className="flex justify-between">
           <h5 className="modal-title">Update Employment Type</h5>
@@ -69,17 +88,29 @@ const EmploymentTypeUpdateModal = ({ open, setOpen, editData }: UpdateModalProps
           <div className="card__wrapper">
             <div className="grid grid-cols-12 gap-y-3 gap-x-3">
               <div className="col-span-12">
-                <InputField label="Employment Type Name" id="name" type="text"
-                  register={register("name", { required: "Name is required" })} error={errors.name} />
+                <InputField
+                  label="Employment Type Name"
+                  id="name"
+                  type="text"
+                  register={register("name", { required: "Name is required" })}
+                  error={errors.name}
+                />
               </div>
               <div className="col-span-12">
-                <InputField label="Description" id="description" type="text"
-                  register={register("description")} error={errors.description} />
+                <InputField
+                  label="Description"
+                  id="description"
+                  type="text"
+                  register={register("description")}
+                  error={errors.description}
+                />
               </div>
             </div>
           </div>
           <div className="submit__btn text-center">
-            <button className="btn btn-primary" type="submit">Update</button>
+            <button className="btn btn-primary" type="submit">
+              Update
+            </button>
           </div>
         </form>
       </DialogContent>

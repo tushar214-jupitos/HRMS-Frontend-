@@ -68,7 +68,7 @@ const GradeTable = () => {
           return;
         }
 
-        const res = await fetch(`${API_BASE_URL}/api/master/grades/`, {
+        const res = await fetch(`${API_BASE_URL}/master/grades/`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -115,7 +115,7 @@ const GradeTable = () => {
         return;
       }
 
-      const res = await fetch(`${API_BASE_URL}/api/master/grades/${id}/`, {
+      const res = await fetch(`${API_BASE_URL}/master/grades/${id}/`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -148,7 +148,10 @@ const GradeTable = () => {
           <Box sx={{ width: "100%" }} className="table-responsive">
             <Paper sx={{ width: "100%", mb: 2 }}>
               <TableContainer className="table mb-[20px] hover multiple_tables w-full">
-                <Table aria-labelledby="tableTitle" className="whitespace-nowrap">
+                <Table
+                  aria-labelledby="tableTitle"
+                  className="whitespace-nowrap"
+                >
                   <TableHead>
                     <TableRow className="table__title">
                       {headCells.map((headCell) => (

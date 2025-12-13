@@ -26,7 +26,7 @@ const AddDepartmentModal = ({ open, setOpen }: statePropsType) => {
         return;
       }
 
-      const res = await fetch(`${API_BASE_URL}/api/master/departments/`, {
+      const res = await fetch(`${API_BASE_URL}/master/departments/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

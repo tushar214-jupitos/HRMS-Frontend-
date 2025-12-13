@@ -27,7 +27,7 @@ const AddEmploymentTypeModal = ({ open, setOpen }: statePropsType) => {
         return;
       }
 
-      const res = await fetch(`${API_BASE_URL}/api/master/employment-types/`, {
+      const res = await fetch(`${API_BASE_URL}/master/employment-types/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -51,7 +51,9 @@ const AddEmploymentTypeModal = ({ open, setOpen }: statePropsType) => {
         window.location.reload();
       }
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.message || "Failed to add employment type. Please try again.";
+      const errorMessage =
+        error?.response?.data?.message ||
+        "Failed to add employment type. Please try again.";
       toast.error(errorMessage);
     }
   };

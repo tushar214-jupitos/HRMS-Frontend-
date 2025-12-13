@@ -118,10 +118,15 @@ const EditEmployeeModal = ({
     };
 
     try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        toast.error("Unauthorized! Please login again.");
+        return;
+      }
+
       setIsSubmitting(true);
 
       const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/employee/${employee.id}/`;
-      const token = process.env.NEXT_PUBLIC_API_TOKEN;
 
       const response = await fetch(apiUrl, {
         method: "PATCH",
