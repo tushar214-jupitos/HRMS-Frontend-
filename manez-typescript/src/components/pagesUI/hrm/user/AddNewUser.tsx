@@ -49,24 +49,37 @@ const AddNewUser = ({ open, setOpen }: statePropsType) => {
           "ngrok-skip-browser-warning": "true",
         };
 
-        const [rolesRes, deptRes] = await Promise.all([
-          fetch(
-            "https://astrologically-smashable-paxton.ngrok-free.dev/api/dropdowns/user/roles/",
-            { headers }
-          ),
-          fetch(
-            "https://astrologically-smashable-paxton.ngrok-free.dev/api/dropdowns/user/departments/",
-            { headers }
-          ),
-        ]);
+        const rolesRes = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/dropdowns/user/roles/`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+              "ngrok-skip-browser-warning": "true",
+            },
+          }
+        );
 
-        if (!rolesRes.ok || !deptRes.ok) {
+        const departmentsRes = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/dropdowns/user/departments/`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+              "ngrok-skip-browser-warning": "true",
+            },
+          }
+        );
+
+        if (!rolesRes.ok || !departmentsRes.ok) {
           toast.error("Failed to load dropdown data (Unauthorized)");
           return;
         }
 
         const rolesData: string[] = await rolesRes.json();
-        const departmentsData: string[] = await deptRes.json();
+        const departmentsData: string[] = await departmentsRes.json();
 
         setRoles(rolesData || []);
         setDepartments(departmentsData || []);
@@ -91,7 +104,7 @@ const AddNewUser = ({ open, setOpen }: statePropsType) => {
       }
 
       const res = await fetch(
-        "https://astrologically-smashable-paxton.ngrok-free.dev/api/users/register/",
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users/register/`,
         {
           method: "POST",
           headers: {

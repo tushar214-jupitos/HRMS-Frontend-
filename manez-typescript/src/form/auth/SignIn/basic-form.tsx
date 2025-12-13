@@ -32,7 +32,7 @@ const SignInBasicForm = () => {
 
     try {
       const res = await fetch(
-        "https://astrologically-smashable-paxton.ngrok-free.dev/api/users/login/",
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users/login/`,
         {
           method: "POST",
           headers: {

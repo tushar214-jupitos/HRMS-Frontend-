@@ -28,7 +28,7 @@ const SignUpBasicForm = () => {
       };
 
       const res = await fetch(
-        "https://astrologically-smashable-paxton.ngrok-free.dev/api/users/register/",
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users/register/`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

@@ -5,6 +5,8 @@ import UserFilter from "./UserFilter";
 import EmployeeSingleCard from "@/components/common/EmployeeSingleCard";
 import { IEmployee } from "@/interface";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 const UserMainArea = () => {
   const [employees, setEmployees] = useState<IEmployee[]>([]);
   const [loading, setLoading] = useState(true);
@@ -14,23 +16,20 @@ const UserMainArea = () => {
       try {
         // Get token from localStorage with fallback
         const fallbackToken =
-          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY1NjUzNTMyLCJpYXQiOjE3NjUyMjE1MzIsImp0aSI6Ijk1OWE2YjM4Y2E3NDQ2N2RiY2ExMjkwMmMwMWJkYzEyIiwidXNlcl9pZCI6IjMifQ.ESK3uI0-OWYLAz3cxko4HQKjrVJeVsmUJGnGGkzvAtM";
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY1NjUzNTMyLCJpYXQiOjE3NjUyMjE1MzIsImp0aSI6Ijk1OWE2YjM4Y2E3NDQ2N2RiY2ExMjkwMmMwMWJkYzEyIiwidXNlcl9pZCI6IjMifQ.ESK3uI0-OWYLAz3cxko4HQKjrVJeVsmUJGnGGkzvAt";
         const token =
           typeof window !== "undefined"
-            ? localStorage.getItem("authToken") || fallbackToken
+            ? localStorage.getItem("accessToken") || fallbackToken
             : fallbackToken;
 
-        const response = await fetch(
-          "https://astrologically-smashable-paxton.ngrok-free.dev/api/users/list",
-          {
-            method: "GET",
-            headers: {
-              "ngrok-skip-browser-warning": "true",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        const data = await response.json();
+        const res = await fetch(`${API_BASE_URL}/api/users/list`, {
+          method: "GET",
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await res.json();
         console.log("API Response:", data);
 
         // Transform API data to match IEmployee interface

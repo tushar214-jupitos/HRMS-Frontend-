@@ -59,7 +59,7 @@ const HeaderUserProfile = ({
         }
 
         const res = await fetch(
-          "https://astrologically-smashable-paxton.ngrok-free.dev/api/users/me",
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users/me`,
           {
             method: "GET",
             headers: {
