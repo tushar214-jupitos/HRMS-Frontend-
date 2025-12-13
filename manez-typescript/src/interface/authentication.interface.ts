@@ -7,11 +7,16 @@ export interface ISignInForm {
 };
 //Define an interface for the sign up form 
 export type ISignUpForm = {
-    name: string;
-    email:string;
+    name: string;       // username
+    firstName: string;
+    lastName: string;
+    email: string;
     password: string;
+    role?: string;      // optional (we set default "employee")
     rememberMe?: boolean;
 };
+
+
 //Define an interface for the forgot
 export interface IForgotForm  {
     email: string;

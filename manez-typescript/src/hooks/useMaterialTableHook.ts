@@ -1,5 +1,7 @@
 import { useState, useMemo } from "react";
+
 export type RowObject = { [key: string]: string | number | boolean };
+
 type Order = "asc" | "desc";
 
 function useMaterialTableHook<T extends RowObject>(
@@ -50,12 +52,12 @@ function useMaterialTableHook<T extends RowObject>(
 
   const handleChangeRowsPerPage = (newRowsPerPage: number) => {
     setRowsPerPage(newRowsPerPage);
-    setPage(1); // Reset to first page when changing rows per page
+    setPage(1);
   };
 
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
-    setPage(1); // Reset to first page when changing search query
+    setPage(1);
   };
 
   const isSelected = (id: number) => selected.includes(id);
@@ -83,11 +85,10 @@ function useMaterialTableHook<T extends RowObject>(
     return [...filteredRows].sort(comparator);
   }, [filteredRows, order, orderBy]);
 
-  // Handle Delete for Single Row
   const handleDelete = (idToDelete: number) => {
     setRows((prevRows) => prevRows.filter((_, index) => index !== idToDelete));
-    setSelected([]); // Clear selection after delete
-    setPage(1); // Reset to first page after deletion to refresh paginated rows
+    setSelected([]);
+    setPage(1);
   };
 
   const paginatedRows = useMemo(
@@ -116,7 +117,9 @@ function useMaterialTableHook<T extends RowObject>(
     handleChangePage,
     handleChangeRowsPerPage,
     handleSearchChange,
-    handleDelete, // Expose handleDelete in return
+    handleDelete,
+    rows,
+    setRows,
   };
 }
 

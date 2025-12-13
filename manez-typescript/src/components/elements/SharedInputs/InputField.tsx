@@ -4,15 +4,16 @@ import { FieldError, UseFormRegister } from "react-hook-form";
 
 interface InputFieldProps {
   label: string;
-  id: string;
+  id?: string;
   type?: string;
   required?: boolean;
   register?: ReturnType<UseFormRegister<any>>;
-  error?: FieldError;
+  error?: FieldError | string;
   groupInput?: boolean;
   groupText?: string;
   isTextArea?: boolean;
   defaultValue?: string | number;
+  placeholder?: string;
 }
 
 const InputField: React.FC<InputFieldProps> = ({
@@ -48,7 +49,7 @@ const InputField: React.FC<InputFieldProps> = ({
                     {...(register ? register : {})}
                   />
                 </div>
-                {error && <ErrorMessage error={error.message} />}
+                {error && <ErrorMessage error={typeof error === 'string' ? error : error.message} />}
               </>
             ) : (
               <>
@@ -62,7 +63,7 @@ const InputField: React.FC<InputFieldProps> = ({
                     {...(register ? register : {})}
                   />
                 </div>
-                {error && <ErrorMessage error={error.message} />}
+                {error && <ErrorMessage error={typeof error === 'string' ? error : error.message} />}
               </>
             )}
           </>
@@ -76,7 +77,7 @@ const InputField: React.FC<InputFieldProps> = ({
                 {...(register ? register : {})}
               ></textarea>
             </div>
-            {error && <ErrorMessage error={error.message} />}
+            {error && <ErrorMessage error={typeof error === 'string' ? error : error.message} />}
           </>
         )}
       </>

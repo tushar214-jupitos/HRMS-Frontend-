@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 import sidebarMainLogo from "../../../../public/assets/images/logo/logo.svg";
 import sidebarDarkLogo from "../../../../public/assets/images/logo/logo-white.svg";
 import useGlobalContext from "@/hooks/use-context";
-import sidebarImg from "../../../../public/assets/images/bg/side-bar.png";
+//import sidebarImg from "../../../../public/assets/images/bg/side-bar.png";
 import sidebarData from "@/data/sidebar-data";
 import { usePathname } from "next/navigation";
 
@@ -291,8 +291,8 @@ const DashBoardSidebar = () => {
           {/* <div
             className="sidebar__thumb sidebar-bg"
             style={{ backgroundImage: `url(${sidebarImg.src})` }}
-          >
-            <div className="sidebar__thumb-content">
+          >/*
+          /*  <div className="sidebar__thumb-content">
               <p className="sidebar__thumb-title">
                 Upgrade to PRO to get access all Features!
               </p>

@@ -1,4 +1,3 @@
-
 import { IEmployee } from "@/interface";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,6 +8,11 @@ interface propsType {
 }
 
 const EmployeeSingleCard = ({ employee }: propsType) => {
+  const imgSrc =
+    typeof employee.image === "string"
+      ? employee.image || "/default-avatar.png"
+      : (employee.image as any)?.src || "/default-avatar.png";
+
   return (
     <>
       <div className="col-span-12 md:col-span-6 xl:col-span-4 xxl:col-span-3">
@@ -17,10 +21,13 @@ const EmployeeSingleCard = ({ employee }: propsType) => {
             <div className="employee__thumb mb-[15px] flex justify-center">
               <Link href={`/hrm/employee-profile/${employee.id}`}>
                 <Image
-                  src={employee.image}
-                  style={{ width: "100%", height: "auto" }}
-                  priority
+                  src={imgSrc}
+                  width={100}
+                  height={100}
                   alt={`${employee.name}'s image`}
+                  priority
+                  unoptimized
+                  style={{ objectFit: "cover", borderRadius: "50%" }}
                 />
               </Link>
             </div>

@@ -15,7 +15,7 @@ const sidebarData: SidebarCategory[] = [
             label: "Employee Dashboard",
             link: "/dashboard/employee-dashboard",
           },
-          // { label: "CRM Analytics", link: "/dashboard/crm-dashboard" },
+          { label: "CRM Analytics", link: "/dashboard/crm-dashboard" },
         ],
       },
       {
@@ -41,16 +41,17 @@ const sidebarData: SidebarCategory[] = [
           { label: "Warning", link: "/hrm/warning" },
         ],
       },
-      // {
-      //   id: 3,
-      //   label: "CRM",
-      //   icon: "icon-crm",
-      //   subItems: [
-      //     { label: "Leads", link: "/crm/leads" },
-      //     { label: "Deals", link: "/crm/deals" },
-      //     { label: "CRM Setup", link: "/crm/crm-setup" },
-      //   ],
-      // },
+      {
+        id: 3,
+        label: "CRM",
+        icon: "icon-crm",
+        subItems: [
+          { label: "Leads", link: "/crm/leads" },
+          { label: "Deals", link: "/crm/deals" },
+          { label: "CRM Setup", link: "/crm/crm-setup" },
+        ],
+      },
+
       {
         id: 4,
         label: "Apps",
@@ -187,6 +188,17 @@ const sidebarData: SidebarCategory[] = [
           { label: "Invoice List", link: "/invoice/app-invoice-list" },
         ],
       },
+      {
+        id: 22,
+        label: "Master Data",
+        icon: "fa-light fa-database",
+        subItems: [
+          { label: "Department", link: "/master-data/department" },
+          { label: "Grade", link: "/master-data/grade" },
+          { label: "Designation", link: "/master-data/designation" },
+          { label: "Employment Type", link: "/master-data/employment-type" },
+        ],
+      },
     ],
   },
   {
@@ -194,7 +206,7 @@ const sidebarData: SidebarCategory[] = [
     category: "Pages",
     items: [
       {
-        id: 22,
+        id: 23,
         link: "#",
         label: "Authentication",
         icon: "fa-sharp fa-light fa-key",
@@ -237,7 +249,7 @@ const sidebarData: SidebarCategory[] = [
         ],
       },
       {
-        id: 23,
+        id: 24,
         label: "Error",
         icon: "fa-sharp fa-light fa-triangle-exclamation",
         subItems: [
@@ -247,7 +259,7 @@ const sidebarData: SidebarCategory[] = [
         ],
       },
       {
-        id: 24,
+        id: 25,
         label: "Pages",
         icon: "fa-light fa-clone",
         subItems: [
@@ -274,7 +286,7 @@ const sidebarData: SidebarCategory[] = [
     category: "General",
     items: [
       {
-        id: 25,
+        id: 26,
         label: "Forms",
         icon: "fa-light fa-notebook",
         subItems: [
@@ -286,7 +298,7 @@ const sidebarData: SidebarCategory[] = [
         ],
       },
       {
-        id: 26,
+        id: 27,
         label: "Base UI",
         icon: "fa-light fa-clone",
         subItems: [
@@ -308,7 +320,7 @@ const sidebarData: SidebarCategory[] = [
         ],
       },
       {
-        id: 27,
+        id: 28,
         label: "Advanced UI",
         icon: "fa-light fa-feather",
         subItems: [
@@ -331,7 +343,7 @@ const sidebarData: SidebarCategory[] = [
     category: "Icons",
     items: [
       {
-        id: 28,
+        id: 29,
         label: "Icomoon",
         icon: "icon-icons",
         link: "/elements/element-icon",
@@ -343,7 +355,7 @@ const sidebarData: SidebarCategory[] = [
     category: "Tables & Charts",
     items: [
       {
-        id: 29,
+        id: 30,
         label: "Tables",
         icon: "fa-regular fa-pause",
         subItems: [
@@ -352,7 +364,7 @@ const sidebarData: SidebarCategory[] = [
         ],
       },
       {
-        id: 30,
+        id: 31,
         label: "Charts",
         icon: "icon-apexcharts",
         subItems: [
@@ -408,7 +420,7 @@ const sidebarData: SidebarCategory[] = [
     category: "MultiLevel",
     items: [
       {
-        id: 31,
+        id: 32,
         label: "MultiLevel Menu",
         icon: "fa-sharp fa-solid fa-arrow-turn-down",
         subItems: [
@@ -433,5 +445,9 @@ const sidebarData: SidebarCategory[] = [
     ],
   },
 ];
+
+
+
+
 
 export default sidebarData;
