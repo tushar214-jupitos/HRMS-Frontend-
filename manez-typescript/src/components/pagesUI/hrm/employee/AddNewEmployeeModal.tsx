@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Dialog, DialogTitle, DialogContent } from "@mui/material";
 import { statePropsType } from "@/interface/common.interface";
 import { useForm } from "react-hook-form";
@@ -8,6 +8,10 @@ import FormLabel from "@/components/elements/SharedInputs/FormLabel";
 import DatePicker from "react-datepicker";
 import SelectBox from "@/components/elements/SharedInputs/SelectBox";
 import { toast } from "sonner";
+import {
+  linkUserToEmployee,
+  getUserEmails,
+} from "../../../../lib/employeeService";
 
 type EmployeeFormData = {
   emp_id: string;
@@ -17,6 +21,7 @@ type EmployeeFormData = {
   official_email: string;
   date_of_birth?: string;
   blood_group?: string;
+  designation?: string;
   father_or_husband_name?: string;
   father_age?: number | string;
   address?: string;
@@ -24,10 +29,8 @@ type EmployeeFormData = {
   date_of_joining?: string;
   overall_experience?: string;
   previous_experience?: string;
-  employment_type?: string;
   employment_status?: string;
   job_title?: string;
-  role?: string;
   reporting_manager_email?: string;
   bank_name?: string;
   account_number?: string;
@@ -43,7 +46,6 @@ interface DropdownOption {
   label: string;
   name?: string;
   email?: string;
-  designation?: string;
   emp_id?: string;
 }
 
@@ -55,10 +57,21 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [employeePhoto, setEmployeePhoto] = useState<File | null>(null);
   const [documents, setDocuments] = useState<File[]>([]);
+  const [userEmailOptions, setUserEmailOptions] = useState<DropdownOption[]>(
+    []
+  );
+  const [userEmailSearch, setUserEmailSearch] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [selectedUserEmail, setSelectedUserEmail] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState<string | number | "">(
+    ""
+  );
+  const [createdEmployeeId, setCreatedEmployeeId] = useState<
+    string | number | null
+  >(null);
+  const [isLinking, setIsLinking] = useState(false);
 
   // Dropdown states
-  const [roles, setRoles] = useState<DropdownOption[]>([]);
-  const [employmentTypes, setEmploymentTypes] = useState<DropdownOption[]>([]);
   const [employmentStatuses, setEmploymentStatuses] = useState<
     DropdownOption[]
   >([]);
@@ -66,6 +79,7 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
   const [jobTitles, setJobTitles] = useState<DropdownOption[]>([]);
   const [bloodGroups, setBloodGroups] = useState<DropdownOption[]>([]);
   const [grades, setGrades] = useState<DropdownOption[]>([]);
+  const [designations, setDesignations] = useState<DropdownOption[]>([]);
   const [reportingManagers, setReportingManagers] = useState<DropdownOption[]>(
     []
   );
@@ -158,42 +172,24 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
 
         // Fetch all dropdowns in parallel
         const [
-          roleRes,
-          empTypeRes,
           empStatusRes,
           emailRes,
           jobTitleRes,
           bloodRes,
           gradeRes,
+          designationRes,
           managerRes,
         ] = await Promise.all([
-          fetch(`${apiUrl}/dropdowns/employee/roles/`, { headers }),
-          fetch(`${apiUrl}/dropdowns/employee/employment-types/`, { headers }),
           fetch(`${apiUrl}/dropdowns/employee/status/`, { headers }),
           fetch(`${apiUrl}/dropdowns/employee/official-emails/`, { headers }),
           fetch(`${apiUrl}/dropdowns/employee/job-titles/`, { headers }),
           fetch(`${apiUrl}/dropdowns/employee/blood-groups/`, { headers }),
           fetch(`${apiUrl}/dropdowns/grades/`, { headers }),
+          fetch(`${apiUrl}/dropdowns/designations/`, { headers }),
           fetch(`${apiUrl}/dropdowns/employee/reporting-managers/`, {
             headers,
           }),
         ]);
-
-        // Process roles
-        if (roleRes.ok) {
-          const data = await roleRes.json();
-          setRoles(parseDropdownData(data, "Roles"));
-        } else {
-          console.error("Failed to fetch roles:", roleRes.status);
-        }
-
-        // Process employment types
-        if (empTypeRes.ok) {
-          const data = await empTypeRes.json();
-          setEmploymentTypes(parseDropdownData(data, "Employment Types"));
-        } else {
-          console.error("Failed to fetch employment types:", empTypeRes.status);
-        }
 
         // Process employment statuses
         if (empStatusRes.ok) {
@@ -238,6 +234,14 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
           console.error("Failed to fetch grades:", gradeRes.status);
         }
 
+        // Process designations
+        if (designationRes.ok) {
+          const data = await designationRes.json();
+          setDesignations(parseDropdownData(data, "Designations"));
+        } else {
+          console.error("Failed to fetch designations:", designationRes.status);
+        }
+
         // Process reporting managers
         if (managerRes.ok) {
           const data = await managerRes.json();
@@ -248,9 +252,9 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
             Array.isArray(data) ? data : data?.results || data?.data || []
           ).map((item: any) => ({
             value: item.email || item.id || "",
-            label: `${item.name || ""} - ${item.designation || ""} (${
-              item.emp_id || ""
-            })`,
+            label: `${item.name || ""}${item.email ? ` - ${item.email}` : ""}${
+              item.emp_id ? ` (${item.emp_id})` : ""
+            }`,
           }));
           setReportingManagers(
             formattedManagers.length > 0 ? formattedManagers : managers
@@ -261,6 +265,8 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
             managerRes.status
           );
         }
+
+        // End of dropdown fetching - user emails fetched separately
       } catch (error) {
         console.error("Error loading dropdowns:", error);
         toast.error("Failed to load dropdown options");
@@ -270,6 +276,84 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
     };
 
     fetchDropdowns();
+  }, []);
+
+  // Separate useEffect for fetching user emails
+  useEffect(() => {
+    const fetchUserEmails = async () => {
+      try {
+        console.log("=== Fetching user emails START ===");
+        const data = await getUserEmails();
+        console.log("=== User emails response ===", data);
+        console.log("=== Type of response ===", typeof data);
+        console.log("=== Is Array ===", Array.isArray(data));
+
+        let items = data;
+        if (!Array.isArray(data)) {
+          if (data?.results && Array.isArray(data.results)) {
+            items = data.results;
+            console.log("=== Using data.results ===", items);
+          } else if (data?.data && Array.isArray(data.data)) {
+            items = data.data;
+            console.log("=== Using data.data ===", items);
+          } else {
+            console.log("=== No array found in response ===");
+            items = [];
+          }
+        }
+
+        const parsedEmails = items
+          .map((item: any, index: number) => {
+            console.log("=== Processing item ===", item, "type:", typeof item);
+
+            // If item is just a string (email), use it directly
+            if (typeof item === "string") {
+              const result = {
+                value: item,
+                label: item,
+                id: item, // Use email as ID since no separate ID provided
+              } as DropdownOption;
+              console.log("=== String mapped to ===", result);
+              return result;
+            }
+
+            // If item is an object, extract properties
+            const email = item.email || item.user_email || item.username || "";
+            const id = item.id || item.user_id || item.user || email;
+            const result = {
+              value: email,
+              label: email
+                ? `${email}${item.name ? ` - ${item.name}` : ""}`
+                : "",
+              id,
+            } as DropdownOption;
+            console.log("=== Object mapped to ===", result);
+            return result;
+          })
+          .filter((opt: DropdownOption) => opt.value);
+
+        console.log("=== Final parsed user emails ===", parsedEmails);
+        setUserEmailOptions(parsedEmails);
+
+        if (parsedEmails.length === 0) {
+          console.warn(
+            "=== WARNING: No user emails found or parsed successfully ==="
+          );
+        } else {
+          console.log(
+            `=== SUCCESS: ${parsedEmails.length} user emails loaded ===`
+          );
+        }
+      } catch (e) {
+        console.error(
+          "=== ERROR: Failed to fetch user emails via service ===",
+          e
+        );
+        toast.error("Failed to load user emails for linking");
+      }
+    };
+
+    fetchUserEmails();
   }, []);
 
   const formatDate = (date: Date | null) =>
@@ -337,6 +421,7 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
       official_email: data.official_email,
       date_of_birth: formatDate(birthDate),
       blood_group: data.blood_group ?? "",
+      designation: data.designation ?? "",
       father_or_husband_name: data.father_or_husband_name ?? "",
       father_age: data.father_age ? Number(data.father_age) : undefined,
       address: data.address ?? "",
@@ -344,10 +429,8 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
       date_of_joining: formatDate(selectStartDate),
       overall_experience: data.overall_experience ?? "",
       previous_experience: data.previous_experience ?? "",
-      employment_type: data.employment_type ?? "",
       employment_status: data.employment_status ?? "Active",
       job_title: data.job_title ?? "",
-      role: data.role ?? "",
       reporting_manager_email: data.reporting_manager_email ?? "",
       bank_name: data.bank_name ?? "",
       account_number: data.account_number ?? "",
@@ -378,9 +461,14 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
         throw new Error(message || "Failed to add employee. Please try again.");
       }
 
-      toast.success("Employee added successfully!");
+      const created = await response.json();
+      const newEmployeeId =
+        created?.id || created?.employee_id || created?.employee?.id || null;
+      setCreatedEmployeeId(newEmployeeId);
+      toast.success(
+        "Employee added successfully! You can now link a user account."
+      );
       handleReset();
-      setTimeout(() => setOpen(false), 200);
     } catch (error) {
       const message =
         error instanceof Error
@@ -389,6 +477,60 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
       toast.error(message);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleUserEmailChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const value = event.target.value;
+    setSelectedUserEmail(value);
+    const selected = userEmailOptions.find((opt) => opt.value === value);
+    setSelectedUserId(selected?.id || "");
+  };
+
+  const handleEmailSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setUserEmailSearch(value);
+    setShowDropdown(true);
+
+    // Clear selection when typing
+    if (value !== selectedUserEmail) {
+      setSelectedUserEmail("");
+      setSelectedUserId("");
+    }
+  };
+
+  const handleEmailSelect = (email: string, id: string | number) => {
+    setSelectedUserEmail(email);
+    setSelectedUserId(id);
+    setUserEmailSearch(email);
+    setShowDropdown(false);
+  };
+
+  const filteredEmails = userEmailOptions.filter((opt) =>
+    opt.value.toLowerCase().includes(userEmailSearch.toLowerCase())
+  );
+
+  const handleLinkUser = async () => {
+    if (!selectedUserId) {
+      toast.error("Select a user email to link.");
+      return;
+    }
+
+    if (!createdEmployeeId) {
+      toast.error("Please create an employee first, then link a user account.");
+      return;
+    }
+
+    try {
+      setIsLinking(true);
+      await linkUserToEmployee(createdEmployeeId, selectedUserId);
+      toast.success("User linked to employee successfully!");
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to link user to employee");
+    } finally {
+      setIsLinking(false);
     }
   };
 
@@ -576,6 +718,17 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
                   />
                 </div>
 
+                {/* Designation - API Dropdown */}
+                <div className="col-span-12 md:col-span-6">
+                  <SelectBox
+                    id="designation"
+                    label="Designation"
+                    options={designations}
+                    control={control}
+                    isRequired={false}
+                  />
+                </div>
+
                 {/* Father / Husband Age */}
                 <div className="col-span-12 md:col-span-6">
                   <InputField
@@ -631,16 +784,6 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
                   />
                 </div>
 
-                {/* Employment Type - API Dropdown */}
-                <div className="col-span-12 md:col-span-6">
-                  <SelectBox
-                    id="employment_type"
-                    label="Employment Type"
-                    options={employmentTypes}
-                    control={control}
-                  />
-                </div>
-
                 {/* Employment Status - API Dropdown */}
                 <div className="col-span-12 md:col-span-6">
                   <SelectBox
@@ -658,16 +801,6 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
                     id="job_title"
                     label="Job Title"
                     options={jobTitles}
-                    control={control}
-                  />
-                </div>
-
-                {/* Role - API Dropdown */}
-                <div className="col-span-12 md:col-span-6">
-                  <SelectBox
-                    id="role"
-                    label="Role"
-                    options={roles}
                     control={control}
                   />
                 </div>
@@ -860,6 +993,77 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
               >
                 {isSubmitting ? "Submitting..." : "Submit"}
               </button>
+            </div>
+
+            {/* Link User Account - Always Visible */}
+            <div className="card__wrapper mt-8 p-4 border rounded">
+              <h6 className="mb-3 font-semibold">Link User Account</h6>
+              <div className="grid grid-cols-12 gap-4 items-end">
+                {/* User Email Searchable Dropdown */}
+                <div className="col-span-12 md:col-span-6 relative">
+                  <label className="form-label mb-2 block">User Email</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Type to search emails..."
+                      value={userEmailSearch}
+                      onChange={handleEmailSearch}
+                      onFocus={() => setShowDropdown(true)}
+                      onBlur={() =>
+                        setTimeout(() => setShowDropdown(false), 200)
+                      }
+                    />
+                    {showDropdown && filteredEmails.length > 0 && (
+                      <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-auto">
+                        {filteredEmails.map((opt) => (
+                          <div
+                            key={`${opt.id}-${opt.value}`}
+                            className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                            onMouseDown={() =>
+                              handleEmailSelect(opt.value, opt.id || "")
+                            }
+                          >
+                            {opt.label}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {filteredEmails.length} of {userEmailOptions.length} emails
+                  </p>
+                </div>
+
+                {/* User ID Display */}
+                <div className="col-span-12 md:col-span-3">
+                  <label className="form-label mb-2 block">User ID</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={selectedUserId || ""}
+                    readOnly
+                    placeholder="Auto-filled from email selection"
+                  />
+                </div>
+
+                {/* Link User Button */}
+                <div className="col-span-12 md:col-span-3">
+                  <button
+                    type="button"
+                    className="btn btn-primary w-full"
+                    onClick={handleLinkUser}
+                    disabled={isLinking || !selectedUserId}
+                  >
+                    {isLinking ? "Linking..." : "Link User"}
+                  </button>
+                </div>
+              </div>
+              <p className="text-sm text-gray-500 mt-3">
+                {createdEmployeeId
+                  ? `Employee ID: ${createdEmployeeId}`
+                  : "Create an employee first to enable linking"}
+              </p>
             </div>
           </form>
         </DialogContent>
