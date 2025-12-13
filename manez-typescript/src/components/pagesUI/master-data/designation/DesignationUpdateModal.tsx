@@ -33,6 +33,7 @@ const DesignationUpdateModal = ({
         return;
       }
 
+<<<<<<< Updated upstream
       const res = await fetch(
         `${API_BASE_URL}/master/designations/${data.id}/`,
         {
@@ -48,6 +49,20 @@ const DesignationUpdateModal = ({
           }),
         }
       );
+=======
+      const res = await fetch(`${API_BASE_URL}/master/designations/${data.id}/`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+        body: JSON.stringify({
+          name: data.name,
+          department: data.department,
+        }),
+      });
+>>>>>>> Stashed changes
 
       if (!res.ok) {
         toast.error("Failed to update designation. Please try again.");

@@ -120,6 +120,7 @@ const EmploymentTypeTable = () => {
         return;
       }
 
+<<<<<<< Updated upstream
       const res = await fetch(
         `${API_BASE_URL}/master/employment-types/${id}/`,
         {
@@ -131,6 +132,16 @@ const EmploymentTypeTable = () => {
           },
         }
       );
+=======
+      const res = await fetch(`${API_BASE_URL}/master/employment-types/${id}/`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+>>>>>>> Stashed changes
 
       if (!res.ok) {
         setError("Failed to delete employment type");

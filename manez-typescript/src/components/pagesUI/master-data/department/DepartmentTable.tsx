@@ -117,6 +117,7 @@ const DepartmentTable = () => {
         return;
       }
 
+<<<<<<< Updated upstream
       const res = await fetch(`${API_BASE_URL}/master/departments/${id}/`, {
         method: "DELETE",
         headers: {
@@ -125,6 +126,19 @@ const DepartmentTable = () => {
           "ngrok-skip-browser-warning": "true",
         },
       });
+=======
+      const res = await fetch(
+        `${API_BASE_URL}/master/departments/${id}/`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+>>>>>>> Stashed changes
 
       if (!res.ok) {
         setError("Failed to delete department");

@@ -16,9 +16,12 @@ const sidebarData: SidebarCategory[] = [
             link: "/dashboard/employee-dashboard",
           },
           // { label: "CRM Analytics", link: "/dashboard/crm-dashboard" },
+          // { label: "CRM Analytics", link: "/dashboard/crm-dashboard" },
         ],
       },
       {
+
+
         id: 2,
         label: "HRM",
         icon: "icon-hrm",

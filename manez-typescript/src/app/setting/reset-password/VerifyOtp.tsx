@@ -17,7 +17,7 @@
 //     const token = localStorage.getItem("access_token");
 
 //     const res = await fetch(
-//       "https://astrologically-smashable-paxton.ngrok-free.dev/api/users/after-login-password-reset/verify-otp/",
+//       "htdev/users/after-login-password-reset/verify-otp/",
 //       {
 //         method: "POST",
 //         headers: {

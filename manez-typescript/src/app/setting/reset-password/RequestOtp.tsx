@@ -12,7 +12,7 @@
 //     const token = localStorage.getItem("access_token");
 
 //     const res = await fetch(
-//       "https://astrologically-smashable-paxton.ngrok-free.dev/api/users/after-login-password-reset/request/",
+//       "h-free.dev/users/after-login-password-reset/request/",
 //       {
 //         method: "POST",
 //         headers: {

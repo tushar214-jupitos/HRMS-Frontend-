@@ -33,6 +33,7 @@ const EmploymentTypeUpdateModal = ({
         return;
       }
 
+<<<<<<< Updated upstream
       const res = await fetch(
         `${API_BASE_URL}/master/employment-types/${data.id}/`,
         {
@@ -48,6 +49,20 @@ const EmploymentTypeUpdateModal = ({
           }),
         }
       );
+=======
+      const res = await fetch(`${API_BASE_URL}/master/employment-types/${data.id}/`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+        body: JSON.stringify({
+          name: data.name,
+          description: data.description,
+        }),
+      });
+>>>>>>> Stashed changes
 
       if (!res.ok) {
         toast.error("Failed to update employment type. Please try again.");
