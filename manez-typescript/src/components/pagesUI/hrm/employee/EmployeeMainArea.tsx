@@ -159,11 +159,7 @@ const EmployeeMainArea = () => {
 
       const queryString = queryParams.toString();
       const endpoints = [
-        `${apiUrl}/employee/export/`,
         `${apiUrl}/employee/export-excel/`,
-        `${apiUrl}/employee/export_excel/`,
-        `${apiUrl}/employee/export-excel`,
-        `${apiUrl}/employee/export_excel`,
       ].map((base) => (queryString ? `${base}?${queryString}` : base));
 
       let lastError: string | null = null;

@@ -513,7 +513,8 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
 
   const handleEmailSelect = (email: string, id: string | number) => {
     setSelectedUserEmail(email);
-    setSelectedUserId(id);
+    // Use email as fallback if ID is not available
+    setSelectedUserId(id || email);
     setUserEmailSearch(email);
     setShowDropdown(false);
   };
@@ -1006,74 +1007,141 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
             </div>
 
             {/* Link User Account - Always Visible */}
-            <div className="card__wrapper mt-8 p-4 border rounded">
-              <h6 className="mb-3 font-semibold">Link User Account</h6>
-              <div className="grid grid-cols-12 gap-4 items-end">
+            <div className="card__wrapper mt-8 p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <i className="fa-solid fa-link text-primary"></i>
+                <h6 className="font-semibold text-gray-800 dark:text-gray-200">
+                  Link User Account
+                </h6>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                 {/* User Email Searchable Dropdown */}
-                <div className="col-span-12 md:col-span-6 relative">
-                  <label className="form-label mb-2 block">User Email</label>
+                <div className="col-span-1 md:col-span-5 relative">
+                  <label className="form-label mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    User Email <span className="text-red-500">*</span>
+                  </label>
                   <div className="relative">
                     <input
                       type="text"
-                      className="form-control"
+                      className="form-control w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:text-gray-200"
                       placeholder="Type to search emails..."
                       value={userEmailSearch}
                       onChange={handleEmailSearch}
                       onFocus={() => setShowDropdown(true)}
                       onBlur={() =>
-                        setTimeout(() => setShowDropdown(false), 200)
+                        setTimeout(() => setShowDropdown(false), 300)
                       }
                     />
                     {showDropdown && filteredEmails.length > 0 && (
-                      <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-auto">
+                      <div className="absolute z-[100] w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto">
                         {filteredEmails.map((opt) => (
                           <div
                             key={`${opt.id}-${opt.value}`}
-                            className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                            className="px-4 py-3 hover:bg-primary hover:text-white dark:hover:bg-primary cursor-pointer transition-colors duration-150 text-sm"
                             onMouseDown={() =>
-                              handleEmailSelect(opt.value, opt.id || "")
+                              handleEmailSelect(opt.value, opt.id || opt.value)
                             }
                           >
-                            {opt.label}
+                            <div className="flex flex-col">
+                              <span className="font-medium">{opt.label}</span>
+                              {opt.id && (
+                                <span className="text-xs opacity-75">
+                                  ID: {opt.id}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         ))}
                       </div>
                     )}
+                    {showDropdown &&
+                      filteredEmails.length === 0 &&
+                      userEmailSearch && (
+                        <div className="absolute z-[100] w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg p-4 text-center text-gray-500 dark:text-gray-400 text-sm">
+                          No emails found matching "{userEmailSearch}"
+                        </div>
+                      )}
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {filteredEmails.length} of {userEmailOptions.length} emails
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5">
+                    {userEmailSearch && filteredEmails.length > 0 && (
+                      <span>
+                        {filteredEmails.length} of {userEmailOptions.length}{" "}
+                        emails found
+                      </span>
+                    )}
+                    {!userEmailSearch && (
+                      <span>{userEmailOptions.length} emails available</span>
+                    )}
                   </p>
                 </div>
 
                 {/* User ID Display */}
-                <div className="col-span-12 md:col-span-3">
-                  <label className="form-label mb-2 block">User ID</label>
+                <div className="col-span-1 md:col-span-4 relative">
+                  <label className="form-label mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    User ID / Email
+                  </label>
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-gray-200 cursor-not-allowed"
                     value={selectedUserId || ""}
                     readOnly
-                    placeholder="Auto-filled from email selection"
+                    placeholder="Auto-filled on email selection"
                   />
+                  {selectedUserId && (
+                    <div className="absolute right-3 top-[38px] text-green-500">
+                      <i className="fa-solid fa-circle-check"></i>
+                    </div>
+                  )}
                 </div>
 
                 {/* Link User Button */}
-                <div className="col-span-12 md:col-span-3">
+                <div className="col-span-1 md:col-span-3 flex items-end">
                   <button
                     type="button"
-                    className="btn btn-primary w-full"
+                    className="btn btn-primary w-full px-4 py-2 rounded-md font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-md"
                     onClick={handleLinkUser}
-                    disabled={isLinking || !selectedUserId}
+                    disabled={
+                      isLinking || !selectedUserId || !createdEmployeeId
+                    }
                   >
-                    {isLinking ? "Linking..." : "Link User"}
+                    {isLinking ? (
+                      <>
+                        <i className="fa-solid fa-spinner fa-spin mr-2"></i>
+                        Linking...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fa-solid fa-link mr-2"></i>
+                        Link User
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
-              <p className="text-sm text-gray-500 mt-3">
-                {createdEmployeeId
-                  ? `Employee ID: ${createdEmployeeId}`
-                  : "Create an employee first to enable linking"}
-              </p>
+
+              <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
+                <div className="flex items-start gap-2">
+                  <i className="fa-solid fa-circle-info text-blue-500 mt-0.5"></i>
+                  <div className="text-sm text-blue-700 dark:text-blue-300">
+                    {createdEmployeeId ? (
+                      <p>
+                        <span className="font-semibold">Employee Created:</span>{" "}
+                        ID {createdEmployeeId}
+                        <br />
+                        Select a user email from the dropdown to link this
+                        employee to a user account.
+                      </p>
+                    ) : (
+                      <p>
+                        <span className="font-semibold">Note:</span> Please
+                        create an employee first by filling the form above, then
+                        you can link them to a user account.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           </form>
         </DialogContent>

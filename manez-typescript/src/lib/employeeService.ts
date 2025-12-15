@@ -32,10 +32,14 @@ export const linkUserToEmployee = async (
   employeeId: string | number,
   userId: string | number
 ) => {
+  // Check if userId is an email (contains @) or a numeric ID
+  const isEmail = typeof userId === "string" && userId.includes("@");
+  const payload = isEmail ? { user_email: userId } : { user_id: userId };
+  
   const response = await fetch(`${API_BASE_URL}/employee/${employeeId}/link-user/`, {
     method: "POST",
     headers: getAuthHeaders(),
-    body: JSON.stringify({ user_id: userId }),
+    body: JSON.stringify(payload),
   });
   await throwIfNotOk(response, "Failed to link user to employee");
   return response.json();
