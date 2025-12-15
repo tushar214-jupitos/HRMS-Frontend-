@@ -1,6 +1,13 @@
 "use client";
-import React, { useState } from "react";
-import { Dialog, DialogTitle, DialogContent } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  FormControl,
+  Select,
+  MenuItem,
+} from "@mui/material";
 import { IEmployeeLeave } from "@/interface/table.interface";
 import { useForm } from "react-hook-form";
 import InputField from "@/components/elements/SharedInputs/InputField";
@@ -8,12 +15,23 @@ import FormLabel from "@/components/elements/SharedInputs/FormLabel";
 import DatePicker from "react-datepicker";
 import { statePropsType } from "@/interface/common.interface";
 import { toast } from "sonner";
+import { fetchLeaveTypes, createLeaveApplication } from "@/utils/leave-api";
 
-const AddLeavesModal = ({ open, setOpen }: statePropsType) => {
+interface AddLeavesModalProps extends statePropsType {
+  onSuccess?: () => void;
+}
+
+const AddLeavesModal = ({ open, setOpen, onSuccess }: AddLeavesModalProps) => {
   const [selectStartDate, setSelectStartDate] = useState<Date | null>(
     new Date()
   );
   const [selectEndDate, setSelectEndDate] = useState<Date | null>(new Date());
+  const [leaveTypes, setLeaveTypes] = useState<any[]>([]);
+  const [selectedLeaveType, setSelectedLeaveType] = useState<number | string>(
+    ""
+  );
+  const [isLoadingTypes, setIsLoadingTypes] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const {
     register,
     handleSubmit,
@@ -21,19 +39,62 @@ const AddLeavesModal = ({ open, setOpen }: statePropsType) => {
   } = useForm<IEmployeeLeave>();
   const handleToggle = () => setOpen(!open);
 
+  // Fetch leave types from API
+  useEffect(() => {
+    if (open) {
+      loadLeaveTypes();
+    }
+  }, [open]);
+
+  const loadLeaveTypes = async () => {
+    setIsLoadingTypes(true);
+    try {
+      const types = await fetchLeaveTypes();
+      setLeaveTypes(types);
+    } catch (error: any) {
+      console.error("Error fetching leave types:", error);
+      toast.error(error?.message || "Failed to load leave types");
+    } finally {
+      setIsLoadingTypes(false);
+    }
+  };
+
   // Handle added leave
   const onSubmit = async (data: IEmployeeLeave) => {
+    if (!selectedLeaveType || selectedLeaveType === "") {
+      toast.error("Please select a leave type");
+      return;
+    }
+
+    if (!selectStartDate || !selectEndDate) {
+      toast.error("Please select both start and end dates");
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
-      // Simulate API call or processing
-      toast.success("Leave added successfully!");
+      const payload = {
+        leave_type: Number(selectedLeaveType),
+        start_date: selectStartDate.toISOString().split("T")[0],
+        end_date: selectEndDate.toISOString().split("T")[0],
+        reason: data.reason,
+      };
+
+      await createLeaveApplication(payload);
+      toast.success("Leave application submitted successfully!");
+
+      // Trigger refresh callback
+      if (onSuccess) {
+        onSuccess();
+      }
+
       // Close modal after submission
-      setTimeout(() => setOpen(false), 2000);
+      setTimeout(() => setOpen(false), 1500);
     } catch (error: any) {
-      // Show error toast message
-      toast.error(
-        error?.message ||
-          "An error occurred while updating the leave. Please try again!"
-      );
+      console.error("Error submitting leave application:", error);
+      toast.error(error?.message || "Failed to submit leave application");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -59,28 +120,49 @@ const AddLeavesModal = ({ open, setOpen }: statePropsType) => {
                 <div className="card__wrapper mb-20">
                   <div className="grid grid-cols-12 gap-x-5 gap-y-5 maxXs:gap-x-0">
                     <div className="col-span-12 md:col-span-6">
-                      <InputField
-                        label="Leave Type"
-                        id="leaveType"
-                        type="text"
-                        required={false}
-                        register={register("leaveType", {
-                          required: "Leave Type is required",
-                        })}
-                        error={errors.leaveType}
-                      />
-                    </div>
-                    <div className="col-span-12 md:col-span-6">
-                      <InputField
-                        label="Leave Duration"
-                        id="leaveDuration"
-                        type="text"
-                        required={false}
-                        register={register("leaveDuration", {
-                          required: "Leave Duration is required",
-                        })}
-                        error={errors.leaveDuration}
-                      />
+                      <div className="from__input-box select-wrapper">
+                        <div className="form__input-title">
+                          <label htmlFor="leaveType" className="form-label">
+                            Leave Type
+                          </label>
+                        </div>
+                        <div className="mz-default-select">
+                          <FormControl fullWidth>
+                            <Select
+                              id="leaveType"
+                              value={selectedLeaveType}
+                              onChange={(e) =>
+                                setSelectedLeaveType(
+                                  e.target.value as number | string
+                                )
+                              }
+                              displayEmpty
+                              disabled={isLoadingTypes}
+                              renderValue={(selected) => {
+                                if (selected === "") {
+                                  return isLoadingTypes
+                                    ? "Loading..."
+                                    : "Select Leave Type";
+                                }
+                                return (
+                                  leaveTypes.find(
+                                    (type) => type.id === selected
+                                  )?.name || selected
+                                );
+                              }}
+                              MenuProps={{
+                                disableScrollLock: true,
+                              }}
+                            >
+                              {leaveTypes.map((type) => (
+                                <MenuItem key={type.id} value={type.id}>
+                                  {type.name}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        </div>
+                      </div>
                     </div>
 
                     <div className="col-span-12 md:col-span-6">
@@ -141,8 +223,12 @@ const AddLeavesModal = ({ open, setOpen }: statePropsType) => {
               </div>
             </div>
             <div className="submit__btn text-center">
-              <button type="submit" className="btn btn-primary">
-                Submit
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={isSubmitting || isLoadingTypes}
+              >
+                {isSubmitting ? "Submitting..." : "Submit"}
               </button>
             </div>
           </form>

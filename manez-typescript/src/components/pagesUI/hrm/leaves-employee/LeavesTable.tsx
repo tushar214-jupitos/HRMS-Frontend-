@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Box from "@mui/material/Box";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -11,26 +11,38 @@ import Pagination from "@mui/material/Pagination";
 import TableRow from "@mui/material/TableRow";
 import TableSortLabel from "@mui/material/TableSortLabel";
 import Paper from "@mui/material/Paper";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
-import TextField from "@mui/material/TextField";
 import { visuallyHidden } from "@mui/utils";
 import useMaterialTableHook from "@/hooks/useMaterialTableHook";
-import { IEmployeeLeave } from "@/interface/table.interface";
 import { adminLeaveHeadCells } from "@/data/table-head-cell/table-head";
 import { useTableStatusHook } from "@/hooks/use-condition-class";
 import LeavesEditModal from "./LeavesEditModal";
-import { employeeLeaveData } from "@/data/hrm/employee-leave";
 import Link from "next/link";
 import Image from "next/image";
 import DeleteModal from "@/components/common/DeleteModal";
 import TableControls from "@/components/elements/SharedInputs/TableControls";
+import { ILeaveApplicationAPI } from "@/interface/leave.interface";
+import {
+  fetchLeaveApplications,
+  deleteLeaveApplication,
+} from "@/utils/leave-api";
+import { toast } from "sonner";
+import { format } from "date-fns";
 
-const LeavesTable = () => {
+interface LeavesTableProps {
+  refreshTrigger?: number;
+}
+
+const LeavesTable = ({ refreshTrigger }: LeavesTableProps) => {
   const [modalOpen, setModalOpen] = useState(false);
-  const [editData, setEditData] = useState<IEmployeeLeave | null>(null);
+  const [editData, setEditData] = useState<ILeaveApplicationAPI | null>(null);
   const [modalDeleteOpen, setModalDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number>(0);
+  const [leaveApplications, setLeaveApplications] = useState<
+    ILeaveApplicationAPI[]
+  >([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
+
   const {
     order,
     orderBy,
@@ -46,7 +58,93 @@ const LeavesTable = () => {
     handleChangePage,
     handleChangeRowsPerPage,
     handleSearchChange,
-  } = useMaterialTableHook<IEmployeeLeave | any>(employeeLeaveData, 10);
+    setRows,
+  } = useMaterialTableHook<ILeaveApplicationAPI | any>(leaveApplications, 10);
+
+  // Fetch leave applications from API
+  const loadLeaveApplications = async () => {
+    setIsLoading(true);
+    console.log("🔍 Starting to load leave applications...");
+    console.log("API Base URL:", process.env.NEXT_PUBLIC_API_BASE_URL);
+
+    try {
+      const response = await fetchLeaveApplications(1, 100);
+      console.log("✅ API Response:", response);
+      console.log("📊 Results count:", response.results?.length);
+      console.log("📋 Results data:", response.results);
+
+      setLeaveApplications(response.results);
+      setRows(response.results); // Update the hook's internal state
+      setTotalCount(response.count);
+
+      console.log("✅ State updated with", response.results?.length, "leaves");
+    } catch (error: any) {
+      console.error("❌ Error loading leave applications:", error);
+      console.error("Error details:", {
+        message: error?.message,
+        stack: error?.stack,
+      });
+      toast.error(error?.message || "Failed to load leave applications");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadLeaveApplications();
+  }, [refreshTrigger]);
+
+  // Handle delete leave application
+  const handleDeleteLeave = async (id: number) => {
+    try {
+      await deleteLeaveApplication(id);
+      toast.success("Leave application deleted successfully!");
+      loadLeaveApplications(); // Refresh the list
+    } catch (error: any) {
+      console.error("Error deleting leave application:", error);
+      toast.error(error?.message || "Failed to delete leave application");
+    }
+  };
+
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), "dd MMM yyyy");
+    } catch {
+      return dateString;
+    }
+  };
+
+  // Get status badge class
+  const getStatusClass = (status: string) => {
+    switch (status) {
+      case "approved":
+      case "manager_approved":
+        return "bd-status-success";
+      case "pending":
+        return "bd-status-warning";
+      case "rejected":
+      case "lop":
+        return "bd-status-danger";
+      default:
+        return "";
+    }
+  };
+
+  // Format status for display
+  const formatStatus = (status: string) => {
+    return status
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+
+  console.log("🔢 Current state:", {
+    leaveApplicationsCount: leaveApplications.length,
+    paginatedRowsCount: paginatedRows.length,
+    filteredRowsCount: filteredRows.length,
+    isLoading,
+  });
 
   return (
     <>
@@ -98,84 +196,105 @@ const LeavesTable = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody className="table__body">
-                      {paginatedRows.map((row, index) => {
-                        const stausClass = useTableStatusHook(row?.status);
-                        return (
-                          <TableRow
-                            key={index}
-                            selected={selected.includes(index)}
-                            onClick={() => handleClick(index)}
-                          >
-                            <TableCell className="sorting_1">
-                              <span className="table-avatar flex justify-start items-center">
-                                <Link
-                                  className="avatar-img me-[10px]"
-                                  href={`/hrm/employee-profile/${index + 1}`}
-                                >
-                                  <Image
-                                    className="img-48 border-circle"
-                                    src={row?.adminImg}
-                                    alt="User Image"
-                                  />
-                                </Link>
-                                <Link
-                                  href={`/hrm/employee-profile/${index + 1}`}
-                                >
-                                  {row?.employeeName}
-                                </Link>
-                              </span>
-                            </TableCell>
+                      {isLoading ? (
+                        <TableRow>
+                          <TableCell colSpan={8} className="text-center py-10">
+                            Loading leave applications...
+                          </TableCell>
+                        </TableRow>
+                      ) : paginatedRows.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={8} className="text-center py-10">
+                            No leave applications found
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        paginatedRows.map((row, index) => {
+                          const stausClass = useTableStatusHook(row?.status);
+                          return (
+                            <TableRow
+                              key={index}
+                              selected={selected.includes(index)}
+                              onClick={() => handleClick(index)}
+                            >
+                              <TableCell className="sorting_1">
+                                <span className="table-avatar flex justify-start items-center">
+                                  <Link
+                                    className="avatar-img me-[10px]"
+                                    href={`/hrm/employee-profile/${index + 1}`}
+                                  >
+                                    <div className="img-48 border-circle bg-primary text-white flex items-center justify-center">
+                                      {row.employee.first_name
+                                        .charAt(0)
+                                        .toUpperCase()}
+                                      {row.employee.last_name
+                                        .charAt(0)
+                                        .toUpperCase()}
+                                    </div>
+                                  </Link>
+                                  <Link
+                                    href={`/hrm/employee-profile/${index + 1}`}
+                                  >
+                                    {row.employee.full_name}
+                                  </Link>
+                                </span>
+                              </TableCell>
 
-                            <TableCell className="table__loan-amount">
-                              {row?.designation}
-                            </TableCell>
-                            <TableCell className="table__loan-amount">
-                              {row?.leaveType}
-                            </TableCell>
+                              <TableCell className="table__loan-amount">
+                                {row.employee.designation}
+                              </TableCell>
+                              <TableCell className="table__loan-amount">
+                                {row.leave_type.name}
+                              </TableCell>
 
-                            <TableCell className="table__loan-date">
-                              {row?.leaveDuration}
-                            </TableCell>
-                            <TableCell className="table__loan-created">
-                              {row?.days}
-                            </TableCell>
-                            <TableCell className="table__loan-created">
-                              {row?.reason}
-                            </TableCell>
+                              <TableCell className="table__loan-date">
+                                {formatDate(row.start_date)} -{" "}
+                                {formatDate(row.end_date)}
+                              </TableCell>
+                              <TableCell className="table__loan-created">
+                                {parseFloat(row.leave_days)}{" "}
+                                {parseFloat(row.leave_days) === 1
+                                  ? "day"
+                                  : "days"}
+                              </TableCell>
+                              <TableCell className="table__loan-created">
+                                {row.reason}
+                              </TableCell>
 
-                            <TableCell className="table__delivery">
-                              <span className={`bd-badge ${stausClass}`}>
-                                {row?.status}
-                              </span>
-                            </TableCell>
-                            <TableCell className="table__icon-box">
-                              <div className="flex items-center justify-start gap-[10px]">
-                                <button
-                                  type="button"
-                                  className="table__icon edit"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setEditData(row);
-                                    setModalOpen(true);
-                                  }}
-                                >
-                                  <i className="fa-sharp fa-light fa-pen"></i>
-                                </button>
-                                <button
-                                  className="removeBtn table__icon delete"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setDeleteId(index);
-                                    setModalDeleteOpen(true);
-                                  }}
-                                >
-                                  <i className="fa-regular fa-trash"></i>
-                                </button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
+                              <TableCell className="table__delivery">
+                                <span className={`bd-badge ${stausClass}`}>
+                                  {row?.status}
+                                </span>
+                              </TableCell>
+                              <TableCell className="table__icon-box">
+                                <div className="flex items-center justify-start gap-[10px]">
+                                  <button
+                                    type="button"
+                                    className="table__icon edit"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setEditData(row);
+                                      setModalOpen(true);
+                                    }}
+                                  >
+                                    <i className="fa-sharp fa-light fa-pen"></i>
+                                  </button>
+                                  <button
+                                    className="removeBtn table__icon delete"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setDeleteId(row.id);
+                                      setModalDeleteOpen(true);
+                                    }}
+                                  >
+                                    <i className="fa-regular fa-trash"></i>
+                                  </button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                      )}
                     </TableBody>
                   </Table>
                 </TableContainer>
@@ -201,11 +320,12 @@ const LeavesTable = () => {
         </div>
       </div>
 
-      {modalOpen && editData?.leaveType && (
+      {modalOpen && editData && (
         <LeavesEditModal
           open={modalOpen}
           setOpen={setModalOpen}
           editData={editData}
+          onSuccess={loadLeaveApplications}
         />
       )}
 
@@ -213,7 +333,7 @@ const LeavesTable = () => {
         <DeleteModal
           open={modalDeleteOpen}
           setOpen={setModalDeleteOpen}
-          handleDeleteFunc={handleDelete}
+          handleDeleteFunc={() => handleDeleteLeave(deleteId)}
           deleteId={deleteId}
         />
       )}
