@@ -7,6 +7,12 @@ import AddLeavesModal from "./AddLeavesModal";
 
 const LeavesEmployeeMainArea = () => {
   const [modalOpen, setModalOpen] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const handleRefresh = () => {
+    setRefreshTrigger((prev) => prev + 1);
+  };
+
   return (
     <>
       <div className="app__slide-wrapper">
@@ -32,11 +38,15 @@ const LeavesEmployeeMainArea = () => {
           </div>
         </div>
         <div className="grid grid-cols-12 gap-x-6 maxXs:gap-x-0">
-          <LeavesSummary />
-          <LeavesTable />
+          <LeavesSummary refreshTrigger={refreshTrigger} />
+          <LeavesTable refreshTrigger={refreshTrigger} />
         </div>
         {modalOpen && (
-          <AddLeavesModal open={modalOpen} setOpen={setModalOpen} />
+          <AddLeavesModal
+            open={modalOpen}
+            setOpen={setModalOpen}
+            onSuccess={handleRefresh}
+          />
         )}
       </div>
     </>
