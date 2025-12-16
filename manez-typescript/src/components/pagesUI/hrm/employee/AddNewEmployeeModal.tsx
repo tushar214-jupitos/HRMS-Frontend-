@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogTitle, DialogContent } from "@mui/material";
 import { statePropsType } from "@/interface/common.interface";
 import { useForm } from "react-hook-form";
@@ -8,10 +8,7 @@ import FormLabel from "@/components/elements/SharedInputs/FormLabel";
 import DatePicker from "react-datepicker";
 import SelectBox from "@/components/elements/SharedInputs/SelectBox";
 import { toast } from "sonner";
-import {
-  linkUserToEmployee,
-  getUserEmails,
-} from "../../../../lib/employeeService";
+// linkUserToEmployee removed from add flow
 
 type EmployeeFormData = {
   emp_id: string;
@@ -57,29 +54,16 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [employeePhoto, setEmployeePhoto] = useState<File | null>(null);
   const [documents, setDocuments] = useState<File[]>([]);
-  const [userEmailOptions, setUserEmailOptions] = useState<DropdownOption[]>(
-    []
-  );
-  const [userEmailSearch, setUserEmailSearch] = useState("");
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [selectedUserEmail, setSelectedUserEmail] = useState("");
-  const [selectedUserId, setSelectedUserId] = useState<string | number | "">(
-    ""
-  );
-  const [createdEmployeeId, setCreatedEmployeeId] = useState<
-    string | number | null
-  >(null);
-  const [isLinking, setIsLinking] = useState(false);
 
   // Dropdown states
   const [employmentStatuses, setEmploymentStatuses] = useState<
     DropdownOption[]
   >([]);
-  const [officialEmails, setOfficialEmails] = useState<DropdownOption[]>([]);
   const [jobTitles, setJobTitles] = useState<DropdownOption[]>([]);
   const [bloodGroups, setBloodGroups] = useState<DropdownOption[]>([]);
   const [grades, setGrades] = useState<DropdownOption[]>([]);
   const [designations, setDesignations] = useState<DropdownOption[]>([]);
+  const [officialEmails, setOfficialEmails] = useState<DropdownOption[]>([]);
   const [reportingManagers, setReportingManagers] = useState<DropdownOption[]>(
     []
   );
@@ -97,6 +81,7 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
       employment_status: "Active",
     },
   });
+
   // Helper function to parse dropdown data
   const parseDropdownData = (
     data: any,
@@ -140,10 +125,26 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
         if (typeof item === "string") {
           return { value: item, label: item };
         } else if (typeof item === "object" && item !== null) {
-          const value = item.value || item.name || item.id || "";
+          const value =
+            item.email ||
+            item.value ||
+            item.name ||
+            item.id ||
+            item.emp_id ||
+            "";
           const label =
-            item.label || item.name || item.display_name || String(value);
-          return { value, label };
+            item.email ||
+            item.label ||
+            item.name ||
+            item.display_name ||
+            String(value);
+          return {
+            value,
+            label,
+            name: item.name,
+            email: item.email,
+            emp_id: item.emp_id,
+          };
         }
         return { value: "", label: "" };
       })
@@ -178,22 +179,18 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
         // Fetch all dropdowns in parallel
         const [
           empStatusRes,
-          emailRes,
           jobTitleRes,
           bloodRes,
           gradeRes,
           designationRes,
-          managerRes,
+          userEmailsRes,
         ] = await Promise.all([
           fetch(`${apiUrl}/dropdowns/employee/status/`, { headers }),
-          fetch(`${apiUrl}/dropdowns/employee/official-emails/`, { headers }),
           fetch(`${apiUrl}/dropdowns/employee/job-titles/`, { headers }),
           fetch(`${apiUrl}/dropdowns/employee/blood-groups/`, { headers }),
           fetch(`${apiUrl}/dropdowns/grades/`, { headers }),
           fetch(`${apiUrl}/dropdowns/designations/`, { headers }),
-          fetch(`${apiUrl}/dropdowns/employee/reporting-managers/`, {
-            headers,
-          }),
+          fetch(`${apiUrl}/dropdowns/user/emails/`, { headers }),
         ]);
 
         // Process employment statuses
@@ -207,12 +204,14 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
           );
         }
 
-        // Process official emails
-        if (emailRes.ok) {
-          const data = await emailRes.json();
-          setOfficialEmails(parseDropdownData(data, "Official Emails"));
+        // Process user emails for official email and reporting manager dropdowns
+        if (userEmailsRes.ok) {
+          const data = await userEmailsRes.json();
+          const parsedEmails = parseDropdownData(data, "User Emails");
+          setOfficialEmails(parsedEmails);
+          setReportingManagers(parsedEmails);
         } else {
-          console.error("Failed to fetch official emails:", emailRes.status);
+          console.error("Failed to fetch user emails:", userEmailsRes.status);
         }
 
         // Process job titles
@@ -247,31 +246,7 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
           console.error("Failed to fetch designations:", designationRes.status);
         }
 
-        // Process reporting managers
-        if (managerRes.ok) {
-          const data = await managerRes.json();
-          console.log("Reporting managers response:", data);
-          const managers = parseDropdownData(data);
-          // For reporting managers, use email as value if available
-          const formattedManagers = (
-            Array.isArray(data) ? data : data?.results || data?.data || []
-          ).map((item: any) => ({
-            value: item.email || item.id || "",
-            label: `${item.name || ""}${item.email ? ` - ${item.email}` : ""}${
-              item.emp_id ? ` (${item.emp_id})` : ""
-            }`,
-          }));
-          setReportingManagers(
-            formattedManagers.length > 0 ? formattedManagers : managers
-          );
-        } else {
-          console.error(
-            "Failed to fetch reporting managers:",
-            managerRes.status
-          );
-        }
-
-        // End of dropdown fetching - user emails fetched separately
+        // End of dropdown fetching
       } catch (error) {
         console.error("Error loading dropdowns:", error);
         toast.error("Failed to load dropdown options");
@@ -281,84 +256,6 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
     };
 
     fetchDropdowns();
-  }, []);
-
-  // Separate useEffect for fetching user emails
-  useEffect(() => {
-    const fetchUserEmails = async () => {
-      try {
-        console.log("=== Fetching user emails START ===");
-        const data = await getUserEmails();
-        console.log("=== User emails response ===", data);
-        console.log("=== Type of response ===", typeof data);
-        console.log("=== Is Array ===", Array.isArray(data));
-
-        let items = data;
-        if (!Array.isArray(data)) {
-          if (data?.results && Array.isArray(data.results)) {
-            items = data.results;
-            console.log("=== Using data.results ===", items);
-          } else if (data?.data && Array.isArray(data.data)) {
-            items = data.data;
-            console.log("=== Using data.data ===", items);
-          } else {
-            console.log("=== No array found in response ===");
-            items = [];
-          }
-        }
-
-        const parsedEmails = items
-          .map((item: any, index: number) => {
-            console.log("=== Processing item ===", item, "type:", typeof item);
-
-            // If item is just a string (email), use it directly
-            if (typeof item === "string") {
-              const result = {
-                value: item,
-                label: item,
-                // id is optional in DropdownOption interface, so we can omit it for string items
-              } as DropdownOption;
-              console.log("=== String mapped to ===", result);
-              return result;
-            }
-
-            // If item is an object, extract properties
-            const email = item.email || item.user_email || item.username || "";
-            const id = item.id || item.user_id || item.user || email;
-            const result = {
-              value: email,
-              label: email
-                ? `${email}${item.name ? ` - ${item.name}` : ""}`
-                : "",
-              id,
-            } as DropdownOption;
-            console.log("=== Object mapped to ===", result);
-            return result;
-          })
-          .filter((opt: DropdownOption) => opt.value);
-
-        console.log("=== Final parsed user emails ===", parsedEmails);
-        setUserEmailOptions(parsedEmails);
-
-        if (parsedEmails.length === 0) {
-          console.warn(
-            "=== WARNING: No user emails found or parsed successfully ==="
-          );
-        } else {
-          console.log(
-            `=== SUCCESS: ${parsedEmails.length} user emails loaded ===`
-          );
-        }
-      } catch (e) {
-        console.error(
-          "=== ERROR: Failed to fetch user emails via service ===",
-          e
-        );
-        toast.error("Failed to load user emails for linking");
-      }
-    };
-
-    fetchUserEmails();
   }, []);
 
   const formatDate = (date: Date | null) =>
@@ -471,13 +368,9 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
         throw new Error(message || "Failed to add employee. Please try again.");
       }
 
-      const created = await response.json();
-      const newEmployeeId =
-        created?.id || created?.employee_id || created?.employee?.id || null;
-      setCreatedEmployeeId(newEmployeeId);
-      toast.success(
-        "Employee added successfully! You can now link a user account."
-      );
+      await response.json();
+
+      toast.success("Employee added successfully!");
       handleReset();
     } catch (error) {
       const message =
@@ -490,60 +383,7 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
     }
   };
 
-  const handleUserEmailChange = (
-    event: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    const value = event.target.value;
-    setSelectedUserEmail(value);
-    const selected = userEmailOptions.find((opt) => opt.value === value);
-    setSelectedUserId(selected?.id || "");
-  };
-
-  const handleEmailSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    setUserEmailSearch(value);
-    setShowDropdown(true);
-
-    // Clear selection when typing
-    if (value !== selectedUserEmail) {
-      setSelectedUserEmail("");
-      setSelectedUserId("");
-    }
-  };
-
-  const handleEmailSelect = (email: string, id: string | number) => {
-    setSelectedUserEmail(email);
-    // Use email as fallback if ID is not available
-    setSelectedUserId(id || email);
-    setUserEmailSearch(email);
-    setShowDropdown(false);
-  };
-
-  const filteredEmails = userEmailOptions.filter((opt) =>
-    opt.value.toLowerCase().includes(userEmailSearch.toLowerCase())
-  );
-
-  const handleLinkUser = async () => {
-    if (!selectedUserId) {
-      toast.error("Select a user email to link.");
-      return;
-    }
-
-    if (!createdEmployeeId) {
-      toast.error("Please create an employee first, then link a user account.");
-      return;
-    }
-
-    try {
-      setIsLinking(true);
-      await linkUserToEmployee(createdEmployeeId, selectedUserId);
-      toast.success("User linked to employee successfully!");
-    } catch (error: any) {
-      toast.error(error?.message || "Failed to link user to employee");
-    } finally {
-      setIsLinking(false);
-    }
-  };
+  // No user linking logic anymore
 
   if (loadingDropdowns) {
     return (
@@ -648,16 +488,14 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
                   />
                 </div>
 
-                {/* Official Email */}
+                {/* Official Email - User Emails Dropdown */}
                 <div className="col-span-12 md:col-span-6">
-                  <InputField
-                    label="Official Email"
+                  <SelectBox
                     id="official_email"
-                    type="text"
-                    register={register("official_email", {
-                      required: "Official Email is required",
-                    })}
-                    error={errors.official_email}
+                    label="Official Email"
+                    options={officialEmails}
+                    control={control}
+                    isRequired={true}
                   />
                 </div>
 
@@ -1004,144 +842,6 @@ const AddNewEmployeeModal = ({ open, setOpen }: statePropsType) => {
               >
                 {isSubmitting ? "Submitting..." : "Submit"}
               </button>
-            </div>
-
-            {/* Link User Account - Always Visible */}
-            <div className="card__wrapper mt-8 p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
-              <div className="flex items-center gap-2 mb-4">
-                <i className="fa-solid fa-link text-primary"></i>
-                <h6 className="font-semibold text-gray-800 dark:text-gray-200">
-                  Link User Account
-                </h6>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                {/* User Email Searchable Dropdown */}
-                <div className="col-span-1 md:col-span-5 relative">
-                  <label className="form-label mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    User Email <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      className="form-control w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:text-gray-200"
-                      placeholder="Type to search emails..."
-                      value={userEmailSearch}
-                      onChange={handleEmailSearch}
-                      onFocus={() => setShowDropdown(true)}
-                      onBlur={() =>
-                        setTimeout(() => setShowDropdown(false), 300)
-                      }
-                    />
-                    {showDropdown && filteredEmails.length > 0 && (
-                      <div className="absolute z-[100] w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                        {filteredEmails.map((opt) => (
-                          <div
-                            key={`${opt.id}-${opt.value}`}
-                            className="px-4 py-3 hover:bg-primary hover:text-white dark:hover:bg-primary cursor-pointer transition-colors duration-150 text-sm"
-                            onMouseDown={() =>
-                              handleEmailSelect(opt.value, opt.id || opt.value)
-                            }
-                          >
-                            <div className="flex flex-col">
-                              <span className="font-medium">{opt.label}</span>
-                              {opt.id && (
-                                <span className="text-xs opacity-75">
-                                  ID: {opt.id}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {showDropdown &&
-                      filteredEmails.length === 0 &&
-                      userEmailSearch && (
-                        <div className="absolute z-[100] w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg p-4 text-center text-gray-500 dark:text-gray-400 text-sm">
-                          No emails found matching "{userEmailSearch}"
-                        </div>
-                      )}
-                  </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5">
-                    {userEmailSearch && filteredEmails.length > 0 && (
-                      <span>
-                        {filteredEmails.length} of {userEmailOptions.length}{" "}
-                        emails found
-                      </span>
-                    )}
-                    {!userEmailSearch && (
-                      <span>{userEmailOptions.length} emails available</span>
-                    )}
-                  </p>
-                </div>
-
-                {/* User ID Display */}
-                <div className="col-span-1 md:col-span-4 relative">
-                  <label className="form-label mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    User ID / Email
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 dark:text-gray-200 cursor-not-allowed"
-                    value={selectedUserId || ""}
-                    readOnly
-                    placeholder="Auto-filled on email selection"
-                  />
-                  {selectedUserId && (
-                    <div className="absolute right-3 top-[38px] text-green-500">
-                      <i className="fa-solid fa-circle-check"></i>
-                    </div>
-                  )}
-                </div>
-
-                {/* Link User Button */}
-                <div className="col-span-1 md:col-span-3 flex items-end">
-                  <button
-                    type="button"
-                    className="btn btn-primary w-full px-4 py-2 rounded-md font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-md"
-                    onClick={handleLinkUser}
-                    disabled={
-                      isLinking || !selectedUserId || !createdEmployeeId
-                    }
-                  >
-                    {isLinking ? (
-                      <>
-                        <i className="fa-solid fa-spinner fa-spin mr-2"></i>
-                        Linking...
-                      </>
-                    ) : (
-                      <>
-                        <i className="fa-solid fa-link mr-2"></i>
-                        Link User
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
-                <div className="flex items-start gap-2">
-                  <i className="fa-solid fa-circle-info text-blue-500 mt-0.5"></i>
-                  <div className="text-sm text-blue-700 dark:text-blue-300">
-                    {createdEmployeeId ? (
-                      <p>
-                        <span className="font-semibold">Employee Created:</span>{" "}
-                        ID {createdEmployeeId}
-                        <br />
-                        Select a user email from the dropdown to link this
-                        employee to a user account.
-                      </p>
-                    ) : (
-                      <p>
-                        <span className="font-semibold">Note:</span> Please
-                        create an employee first by filling the form above, then
-                        you can link them to a user account.
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
             </div>
           </form>
         </DialogContent>

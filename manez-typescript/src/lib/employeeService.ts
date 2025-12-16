@@ -36,7 +36,7 @@ export const linkUserToEmployee = async (
   const isEmail = typeof userId === "string" && userId.includes("@");
   const payload = isEmail ? { user_email: userId } : { user_id: userId };
   
-  const response = await fetch(`${API_BASE_URL}/employee/${employeeId}/link-user/`, {
+  const response = await fetch(`${API_BASE_URL}/employee/${employeeId}/link_user/`, {
     method: "POST",
     headers: getAuthHeaders(),
     body: JSON.stringify(payload),

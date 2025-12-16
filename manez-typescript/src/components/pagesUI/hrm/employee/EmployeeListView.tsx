@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -28,6 +28,9 @@ import TableControls from "@/components/elements/SharedInputs/TableControls";
 import EditEmployeeModal from "./EditEmployeeModal";
 import { useTableStatusHook } from "@/hooks/use-condition-class";
 import { toast } from "sonner";
+import { getUserEmails, linkUserToEmployee } from "@/lib/employeeService";
+import { useForm } from "react-hook-form";
+import SelectBox from "@/components/elements/SharedInputs/SelectBox";
 
 interface EmployeeListViewProps {
   employees: IEmployee[];
@@ -64,6 +67,36 @@ const EmployeeListView = ({
   const [deleting, setDeleting] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [employeeToEdit, setEmployeeToEdit] = useState<IEmployee | null>(null);
+  const [linkModalOpen, setLinkModalOpen] = useState(false);
+  const [employeeToLink, setEmployeeToLink] = useState<IEmployee | null>(null);
+  const [userEmailOptions, setUserEmailOptions] = useState<
+    { value: string; label: string; userId: string | number }[]
+  >([]);
+  const [linking, setLinking] = useState(false);
+  const [loadingUserEmails, setLoadingUserEmails] = useState(false);
+  const [loadingUserId, setLoadingUserId] = useState(false);
+
+  const isEmployeeLinked = (employee: IEmployee | null) => {
+    if (!employee) return false;
+    const raw =
+      (employee as any).user_id ??
+      (employee as any).userId ??
+      (employee as any).user?.id ??
+      (employee as any).user;
+    return Boolean(raw);
+  };
+
+  const {
+    control: linkControl,
+    reset: resetLinkForm,
+    watch: watchLinkForm,
+  } = useForm<{ user_email: string }>({
+    defaultValues: { user_email: "" },
+  });
+
+  const [selectedUserId, setSelectedUserId] = useState<string | number | null>(
+    null
+  );
 
   const {
     order,
@@ -148,6 +181,165 @@ const EmployeeListView = ({
     setEditModalOpen(true);
   };
 
+  const fetchUserEmails = async () => {
+    try {
+      setLoadingUserEmails(true);
+      const data = await getUserEmails();
+
+      const unwrapToArray = (val: any): any[] => {
+        if (Array.isArray(val)) return val;
+        if (val && typeof val === "object") {
+          // Look for the first array inside the object recursively
+          for (const child of Object.values(val)) {
+            const arr = unwrapToArray(child);
+            if (arr.length) return arr;
+          }
+        }
+        return [];
+      };
+
+      const arrayData = unwrapToArray(data);
+
+      const options = arrayData
+        .map((item: any) => {
+          if (typeof item === "string") {
+            const numericMaybe = Number(item);
+            const looksLikeEmail = item.includes("@");
+            return {
+              value: item,
+              label: item,
+              userId: looksLikeEmail
+                ? null // force lookup by email so we don't show the email as ID
+                : Number.isNaN(numericMaybe)
+                ? null
+                : numericMaybe,
+            };
+          }
+
+          const email = item?.email || item?.value || item?.user_email || "";
+          const rawId = item?.id ?? item?.user_id ?? item?.userId;
+          if (!email) return null;
+          const numericId = Number(rawId);
+          const userId =
+            rawId === undefined || rawId === null
+              ? null
+              : Number.isNaN(numericId)
+              ? rawId
+              : numericId;
+          return {
+            value: email,
+            label: email,
+            userId,
+          };
+        })
+        .filter(Boolean) as {
+        value: string;
+        label: string;
+        userId: string | number;
+      }[];
+
+      if (!options.length) {
+        toast.error("No user emails found");
+      }
+
+      setUserEmailOptions(options);
+    } catch (error) {
+      console.error("Failed to load user emails", error);
+      toast.error("Failed to load user emails");
+    } finally {
+      setLoadingUserEmails(false);
+    }
+  };
+
+  const fetchUserIdByEmail = async (email: string) => {
+    if (!email) return null;
+    try {
+      setLoadingUserId(true);
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        toast.error("Unauthorized! Please login again.");
+        return null;
+      }
+
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const res = await fetch(
+        `${apiUrl}/dropdowns/user/id-by-email/?email=${encodeURIComponent(
+          email
+        )}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch user id for email");
+      }
+
+      const json = await res.json();
+      const numericId = Number(json?.id);
+      return Number.isNaN(numericId) ? json?.id : numericId;
+    } catch (error) {
+      console.error("Failed to fetch user id by email", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch user id by email"
+      );
+      return null;
+    } finally {
+      setLoadingUserId(false);
+    }
+  };
+
+  const handleLinkClick = (employee: IEmployee) => {
+    if (isEmployeeLinked(employee)) {
+      toast.info("Already linked to a user");
+      return;
+    }
+    setEmployeeToLink(employee);
+    resetLinkForm({ user_email: "" });
+    setSelectedUserId(null);
+    setLinkModalOpen(true);
+    fetchUserEmails();
+  };
+
+  const handleCloseLinkModal = () => {
+    setLinkModalOpen(false);
+    setEmployeeToLink(null);
+    resetLinkForm({ user_email: "" });
+    setSelectedUserId(null);
+  };
+
+  const handleLinkUser = async () => {
+    if (!employeeToLink || !selectedUserId) {
+      toast.error("Select a user email to link");
+      return;
+    }
+
+    try {
+      setLinking(true);
+      await linkUserToEmployee(employeeToLink.id, selectedUserId);
+      toast.success("User linked to employee");
+      handleCloseLinkModal();
+      if (onEmployeeUpdated) {
+        onEmployeeUpdated();
+      }
+    } catch (error) {
+      console.error("Link user failed", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to link user to employee"
+      );
+    } finally {
+      setLinking(false);
+    }
+  };
+
   const handleEditModalClose = () => {
     setEditModalOpen(false);
     setEmployeeToEdit(null);
@@ -159,6 +351,26 @@ const EmployeeListView = ({
       onEmployeeUpdated();
     }
   };
+
+  const selectedEmail = watchLinkForm("user_email");
+
+  useEffect(() => {
+    if (!selectedEmail) {
+      setSelectedUserId(null);
+      return;
+    }
+    const match = userEmailOptions.find((opt) => opt.value === selectedEmail);
+    if (match && match.userId !== undefined && match.userId !== null) {
+      const numericId = Number(match.userId);
+      setSelectedUserId(Number.isNaN(numericId) ? match.userId : numericId);
+      return;
+    }
+
+    // Fallback: fetch user id by email if not present in dropdown data
+    fetchUserIdByEmail(selectedEmail).then((fetchedId) => {
+      setSelectedUserId(fetchedId);
+    });
+  }, [selectedEmail, userEmailOptions]);
 
   return (
     <div className="card__wrapper">
@@ -313,6 +525,17 @@ const EmployeeListView = ({
                               <i className="fa-sharp fa-light fa-pen"></i>
                             </button>
                             <button
+                              type="button"
+                              className="table__icon download"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleLinkClick(employee);
+                              }}
+                              title="Link User"
+                            >
+                              <i className="fa-solid fa-link"></i>
+                            </button>
+                            <button
                               className="removeBtn table__icon delete"
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -384,6 +607,62 @@ const EmployeeListView = ({
           onSuccess={handleEditSuccess}
         />
       )}
+
+      {/* Link User To Employee Modal */}
+      <Dialog open={linkModalOpen} onClose={handleCloseLinkModal} fullWidth>
+        <DialogTitle>Link User to Employee</DialogTitle>
+        <DialogContent className="space-y-4">
+          <div className="from__input-box">
+            <div className="form__input-title">
+              <label className="input__label">Employee ID</label>
+            </div>
+            <div className="form__input">
+              <input
+                className="form-control"
+                value={employeeToLink?.employeeID || employeeToLink?.id || ""}
+                readOnly
+              />
+            </div>
+          </div>
+
+          <SelectBox
+            id="user_email"
+            label={loadingUserEmails ? "Loading emails" : "User Email"}
+            options={userEmailOptions.map((opt) => ({
+              value: opt.value,
+              label: opt.label,
+            }))}
+            control={linkControl}
+            isRequired={true}
+          />
+
+          <div className="from__input-box">
+            <div className="form__input-title">
+              <label className="input__label">User ID</label>
+            </div>
+            <div className="form__input">
+              <input
+                className="form-control"
+                value={selectedUserId ?? ""}
+                readOnly
+                placeholder="Auto-filled after selecting email"
+              />
+            </div>
+          </div>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseLinkModal} disabled={linking}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleLinkUser}
+            variant="contained"
+            disabled={linking || !selectedUserId}
+          >
+            {linking ? "Linking..." : "Link"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

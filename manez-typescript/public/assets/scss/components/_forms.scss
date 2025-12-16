@@ -965,7 +965,7 @@ li.MuiMenuItem-root.Mui-selected:hover {
 	@apply bg-primary dark:bg-primary;
 }
 li.menu-item {
-	@apply text-[16px] h-[30px] font-normal leading-normal text-headingLightest capitalize bg-transparent px-[15px] py-[5px];
+	@apply text-[16px] h-[30px] font-normal leading-normal text-headingLightest bg-transparent px-[15px] py-[5px];
 	&:hover {
 		@apply bg-primary text-white;
 	}
@@ -975,7 +975,7 @@ li.menu-item {
 }
 
 li.menu-item-small {
-	@apply text-[12px] h-[25px] font-normal leading-normal text-headingLightest bg-transparent px-[15px] py-[5px] capitalize;
+	@apply text-[12px] h-[25px] font-normal leading-normal text-headingLightest bg-transparent px-[15px] py-[5px];
 	&:hover {
 		@apply bg-bgBody dark:bg-bgBody-dark text-headingLightest;
 	}
@@ -985,7 +985,7 @@ li.menu-item-small {
 }
 
 li.menu-item-lg {
-	@apply text-[18px] h-[30px] font-normal leading-normal text-headingLightest bg-transparent px-[15px] py-[5px] capitalize;
+	@apply text-[18px] h-[30px] font-normal leading-normal text-headingLightest bg-transparent px-[15px] py-[5px];
 	&:hover {
 		@apply bg-bgBody dark:bg-bgBody-dark text-headingLightest;
 	}
