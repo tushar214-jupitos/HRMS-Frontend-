@@ -34,6 +34,7 @@ const sidebarData: SidebarCategory[] = [
           { label: "Personal Loan", link: "/hrm/personal-loan" },
           { label: "Employee leaves", link: "/hrm/leaves-employee" },
           { label: "Admin leaves", link: "/hrm/leaves" },
+          { label: "Leave Approval", link: "/hrm/approval-dashboard" },
           { label: "Holidays", link: "/hrm/holidays" },
           { label: "Time Sheet", link: "/hrm/timesheet" },
           { label: "Schedule", link: "/hrm/schedule" },

@@ -289,9 +289,9 @@ export const rejectLeave = async (
 };
 
 // Fetch leave types
-export const fetchLeaveTypes = async (): Promise<ILeaveTypeAPI[]> => {
+export const fetchLeaveTypes = async (): Promise<string[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/leave/leave-types/`, {
+    const response = await fetch(`${API_BASE_URL}/dropdowns/leave/types/`, {
       method: "GET",
       headers: getAuthHeaders(),
     });
@@ -302,8 +302,8 @@ export const fetchLeaveTypes = async (): Promise<ILeaveTypeAPI[]> => {
     }
 
     const data = await response.json();
-    // Handle paginated response
-    return data?.results || (Array.isArray(data) ? data : []);
+    // API returns array of strings
+    return Array.isArray(data) ? data : [];
   } catch (error) {
     console.error("Error fetching leave types:", error);
     throw error;

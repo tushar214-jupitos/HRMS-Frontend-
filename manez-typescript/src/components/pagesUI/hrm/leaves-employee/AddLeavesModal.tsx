@@ -26,7 +26,9 @@ const AddLeavesModal = ({ open, setOpen, onSuccess }: AddLeavesModalProps) => {
     new Date()
   );
   const [selectEndDate, setSelectEndDate] = useState<Date | null>(new Date());
-  const [leaveTypes, setLeaveTypes] = useState<any[]>([]);
+  const [leaveTypes, setLeaveTypes] = useState<{ id: number; name: string }[]>(
+    []
+  );
   const [selectedLeaveType, setSelectedLeaveType] = useState<number | string>(
     ""
   );
@@ -50,7 +52,12 @@ const AddLeavesModal = ({ open, setOpen, onSuccess }: AddLeavesModalProps) => {
     setIsLoadingTypes(true);
     try {
       const types = await fetchLeaveTypes();
-      setLeaveTypes(types);
+      // Map string array to objects with id (index+1) and name
+      const mappedTypes = types.map((name, index) => ({
+        id: index + 1,
+        name: name,
+      }));
+      setLeaveTypes(mappedTypes);
     } catch (error: any) {
       console.error("Error fetching leave types:", error);
       toast.error(error?.message || "Failed to load leave types");
@@ -144,11 +151,10 @@ const AddLeavesModal = ({ open, setOpen, onSuccess }: AddLeavesModalProps) => {
                                     ? "Loading..."
                                     : "Select Leave Type";
                                 }
-                                return (
-                                  leaveTypes.find(
-                                    (type) => type.id === selected
-                                  )?.name || selected
+                                const selectedType = leaveTypes.find(
+                                  (type) => type.id === selected
                                 );
+                                return selectedType?.name || selected;
                               }}
                               MenuProps={{
                                 disableScrollLock: true,
