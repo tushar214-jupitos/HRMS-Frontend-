@@ -18,6 +18,16 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
 
+## Attendance API Mapping
+
+This project now includes improved TypeScript interfaces and mapping functions for handling attendance API responses:
+
+- New interfaces in `src/interface/attendance.interface.ts` accurately represent the API response structure
+- Mapping functions in `src/services/attendanceMappingService.ts` convert API responses to UI-friendly formats
+- Updated components demonstrate proper usage of these new utilities
+
+Refer to `src/docs/attendance-api-mapping.md` for detailed documentation on how to use these new features.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

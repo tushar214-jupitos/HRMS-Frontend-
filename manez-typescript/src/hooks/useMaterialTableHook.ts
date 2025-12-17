@@ -1,19 +1,19 @@
 import { useState, useMemo } from "react";
 
-export type RowObject = { [key: string]: string | number | boolean };
+export type RowObject = { [key: string]: any };
 
 type Order = "asc" | "desc";
 
 function useMaterialTableHook<T extends RowObject>(
   initialRows: T[],
-  defalutData: number = 20
+  defaultData: number = 20
 ) {
   const [rows, setRows] = useState(initialRows);
   const [order, setOrder] = useState<Order>("asc");
   const [orderBy, setOrderBy] = useState<string>("");
   const [selected, setSelected] = useState<number[]>([]);
   const [page, setPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(defalutData);
+  const [rowsPerPage, setRowsPerPage] = useState(defaultData);
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleRequestSort = (property: string) => {

@@ -11,6 +11,7 @@ import LiveChatSection from "./LiveChatSection";
 import MeetingScheduleTwo from "./MeetingScheduleTwo";
 import EmployeeCalendar from "./EmployeeCalander";
 import WelcomeThumb from "./WelcomeThumb";
+import TodaysAttendanceReport from "./TodaysAttendanceReport";
 
 const EmplyeeDashboardMainArea = () => {
   return (
@@ -33,6 +34,9 @@ const EmplyeeDashboardMainArea = () => {
           </div>
           <div className="col-span-12 xxl:col-span-6">
             <EmployeeCalendar />
+          </div>
+          <div className="col-span-12 lg:col-span-6 xxl:col-span-3">
+            <TodaysAttendanceReport />
           </div>
           <div className="col-span-12 xxl:col-span-6">
             <Announcement />

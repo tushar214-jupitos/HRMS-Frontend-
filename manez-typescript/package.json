@@ -30,7 +30,7 @@
     "dayjs": "^1.11.13",
     "dropzone": "^6.0.0-beta.2",
     "moment": "^2.30.1",
-    "next": "14.0.3",
+    "next": "^14.2.35",
     "next-google-fonts": "^2.2.0",
     "react": "^18.3.1",
     "react-apexcharts": "^1.5.0",

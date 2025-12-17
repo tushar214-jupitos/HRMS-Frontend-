@@ -76,9 +76,18 @@ export interface IAdminLeave {
 }
 // Define an interface for the holiday
 export interface IHoliday {
-  date: string; // Date of the holiday (e.g., "1 December 2024")
-  day: string; // Day of the week (e.g., "Sunday")
-  holidayName: string; // Name of the holiday (e.g., "World AIDS Day")
+  id?: number; // Optional ID for API operations
+  title: string; // Name of the holiday (e.g., "World AIDS Day")
+  date: string; // Date of the holiday (e.g., "2024-12-01")
+  holiday_type: string; // Type of holiday (e.g., "public", "company")
+  is_optional: boolean; // Whether the holiday is optional
+  description?: string; // Optional description
+  year?: number; // Year of the holiday
+  created_at?: string; // Creation timestamp
+  updated_at?: string; // Last update timestamp
+  
+  // Index signature to satisfy RowObject constraint
+  [key: string]: string | number | boolean | undefined;
 }
 // Define an interface for the time sheet
 export interface ITimeSheet {
@@ -418,4 +427,26 @@ export interface ICreateProject {
   deadline: string;
   priority: string;
   status: string;
+}
+
+// Define an interface for shift management
+export interface IShift {
+  id: number;
+  name: string;
+  start_time: string;
+  end_time: string;
+  grace_period_minutes: number;
+  half_day_threshold_hours: number;
+  standard_hours: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface IShiftForm {
+  name: string;
+  start_time: string;
+  end_time: string;
+  grace_period_minutes: number;
+  half_day_threshold_hours: number;
+  standard_hours: number;
 }
