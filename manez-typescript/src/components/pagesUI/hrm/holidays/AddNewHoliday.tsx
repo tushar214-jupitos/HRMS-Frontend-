@@ -10,25 +10,40 @@ import FormLabel from "@/components/elements/SharedInputs/FormLabel";
 import DatePicker from "react-datepicker";
 import { statePropsType } from "@/interface/common.interface";
 import { toast } from "sonner";
+import { createHoliday } from "@/services/holidayService";
 
 const AddNewHoliday = ({ open, setOpen }: statePropsType) => {
   const [selectHolidayDate, setSelectHolidayDate] = useState<Date | null>(
     new Date()
   );
-  const { register, handleSubmit, control, formState: { errors }} = useForm<IHoliday>();
+  const { register, handleSubmit, control, formState: { errors }, reset } = useForm<IHoliday>();
   const handleToggle = () => setOpen(!open);
 
-//handle submit form
+  //handle submit form
   const onSubmit = async (data: IHoliday) => {
     try {
-      // Simulate API call or processing
-      toast.success("Add New holiday successfully!");
-      // Close modal after submission
-      setTimeout(() => setOpen(false), 2000);
+      // Prepare holiday data
+      const holidayData = {
+        title: data.holidayName || "",
+        date: selectHolidayDate ? selectHolidayDate.toISOString().split('T')[0] : "",
+        holiday_type: "public", // Default type, can be made configurable
+        is_optional: false, // Default value, can be made configurable
+        description: data.holidayName || ""
+      };
+
+      // Call API to create holiday
+      await createHoliday(holidayData);
+      
+      toast.success("Holiday added successfully!");
+      
+      // Reset form and close modal
+      reset();
+      setOpen(false);
     } catch (error: any) {
       // Show error toast message
       toast.error(
-        error?.message || "An error occurred while updating the leave. Please try again!");
+        error?.message || "An error occurred while adding the holiday. Please try again!"
+      );
     }
   };
 

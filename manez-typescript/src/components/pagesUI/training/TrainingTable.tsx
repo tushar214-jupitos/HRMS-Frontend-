@@ -170,9 +170,7 @@ const TrainingTable = () => {
                                 <ul className="flex items-start justify-center">
                                   <li>
                                     <Link
-                                      href={`/hrm/employee-profile/${
-                                        index + 1
-                                      }`}
+                                      href={`/hrm/employee-profile/${index + 1}`}
                                     >
                                       <Image
                                         className="img-36 border-circle"
@@ -183,9 +181,7 @@ const TrainingTable = () => {
                                   </li>
                                   <li>
                                     <Link
-                                      href={`/hrm/employee-profile/${
-                                        index + 1
-                                      }`}
+                                      href={`/hrm/employee-profile/${index + 1}`}
                                     >
                                       <Image
                                         className="img-36 border-circle"
@@ -196,9 +192,7 @@ const TrainingTable = () => {
                                   </li>
                                   <li>
                                     <Link
-                                      href={`/hrm/employee-profile/${
-                                        index + 1
-                                      }`}
+                                      href={`/hrm/employee-profile/${index + 1}`}
                                     >
                                       <Image
                                         className="img-36 border-circle"

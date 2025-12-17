@@ -9,11 +9,11 @@ import { toast } from "sonner";
 interface RegisterUser {
   username: string;
   password: string;
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   email: string;
   role: string;
-  department: string;
+  department: number;
 }
 
 const AddNewUser = ({ open, setOpen }: statePropsType) => {
@@ -24,7 +24,7 @@ const AddNewUser = ({ open, setOpen }: statePropsType) => {
   } = useForm<RegisterUser>();
 
   const [roles, setRoles] = useState<string[]>([]);
-  const [departments, setDepartments] = useState<string[]>([]);
+  const [departments, setDepartments] = useState<{id: number, name: string}[]>([]);
 
   const handleToggle = () => setOpen(!open);
 
@@ -62,7 +62,7 @@ const AddNewUser = ({ open, setOpen }: statePropsType) => {
         );
 
         const departmentsRes = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/dropdowns/user/departments/`,
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/dropdowns/user/department-choices/`,
           {
             method: "GET",
             headers: {
@@ -78,8 +78,9 @@ const AddNewUser = ({ open, setOpen }: statePropsType) => {
           return;
         }
 
+        // Parse roles as array of strings
         const rolesData: string[] = await rolesRes.json();
-        const departmentsData: string[] = await departmentsRes.json();
+        const departmentsData: {id: number, name: string}[] = await departmentsRes.json();
 
         setRoles(rolesData || []);
         setDepartments(departmentsData || []);
@@ -103,6 +104,9 @@ const AddNewUser = ({ open, setOpen }: statePropsType) => {
         return;
       }
 
+      // Log the data being sent
+      console.log("Sending data to API:", data);
+
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/register/`,
         {
@@ -112,11 +116,15 @@ const AddNewUser = ({ open, setOpen }: statePropsType) => {
             Authorization: `Bearer ${token}`,
             "ngrok-skip-browser-warning": "true",
           },
-          body: JSON.stringify(data),
+          body: JSON.stringify({
+            ...data,
+            department: parseInt(data.department as unknown as string)
+          }),
         }
       );
 
       const responseData = await res.json();
+      console.log("API Response:", responseData);
 
       if (!res.ok) {
         toast.error(responseData?.message || "Registration failed");
@@ -148,11 +156,11 @@ const AddNewUser = ({ open, setOpen }: statePropsType) => {
             <div className="col-span-12 md:col-span-6">
               <InputField
                 label="First Name"
-                id="firstName"
-                register={register("firstName", {
+                id="first_name"
+                register={register("first_name", {
                   required: "First Name is required",
                 })}
-                error={errors.firstName}
+                error={errors.first_name}
               />
             </div>
 
@@ -160,11 +168,11 @@ const AddNewUser = ({ open, setOpen }: statePropsType) => {
             <div className="col-span-12 md:col-span-6">
               <InputField
                 label="Last Name"
-                id="lastName"
-                register={register("lastName", {
+                id="last_name"
+                register={register("last_name", {
                   required: "Last Name is required",
                 })}
-                error={errors.lastName}
+                error={errors.last_name}
               />
             </div>
 
@@ -208,23 +216,23 @@ const AddNewUser = ({ open, setOpen }: statePropsType) => {
             <div className="col-span-12 md:col-span-6">
               <label
                 htmlFor="role"
-                className="block text-sm font-medium mb-1 text-white"
+                className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300"
               >
                 Role
               </label>
               <select
                 id="role"
-                className={`input w-full bg-gray-800 text-white border ${
-                  errors.role ? "border-red-500" : "border-gray-600"
-                } rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500`}
+                className={`w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-white border ${
+                  errors.role ? "border-red-500" : "border-gray-300 dark:border-gray-600"
+                } rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                 {...register("role", { required: "Role is required" })}
               >
                 <option value="" className="text-gray-400">
                   Select Role
                 </option>
                 {roles?.map((role: string, index: number) => (
-                  <option key={index} value={role} className="text-white">
-                    {role}
+                  <option key={index} value={role} className="text-gray-900 dark:text-white bg-white dark:bg-gray-800">
+                    {role.charAt(0).toUpperCase() + role.slice(1).replace(/_/g, " ")}
                   </option>
                 ))}
               </select>
@@ -239,25 +247,26 @@ const AddNewUser = ({ open, setOpen }: statePropsType) => {
             <div className="col-span-12 md:col-span-6">
               <label
                 htmlFor="department"
-                className="block text-sm font-medium mb-1 text-white"
+                className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300"
               >
                 Department
               </label>
               <select
                 id="department"
-                className={`input w-full bg-gray-800 text-white border ${
-                  errors.department ? "border-red-500" : "border-gray-600"
-                } rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500`}
+                className={`w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-white border ${
+                  errors.department ? "border-red-500" : "border-gray-300 dark:border-gray-600"
+                } rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                 {...register("department", {
                   required: "Department is required",
+                  setValueAs: (v) => (v === "" ? "" : parseInt(v)),
                 })}
               >
                 <option value="" className="text-gray-400">
                   Select Department
                 </option>
-                {departments?.map((dept: string, index: number) => (
-                  <option key={index} value={dept} className="text-white">
-                    {dept}
+                {departments?.map((dept) => (
+                  <option key={dept.id} value={dept.id} className="text-gray-900 dark:text-white bg-white dark:bg-gray-800">
+                    {dept.name}
                   </option>
                 ))}
               </select>
