@@ -34,6 +34,13 @@ const AddLeavesModal = ({ open, setOpen, onSuccess }: AddLeavesModalProps) => {
   );
   const [isLoadingTypes, setIsLoadingTypes] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [backupOptions, setBackupOptions] = useState<
+    { id: number; email: string }[]
+  >([]);
+  const [loadingBackupOptions, setLoadingBackupOptions] = useState(false);
+  const [selectedBackupPerson, setSelectedBackupPerson] = useState<number | "">(
+    ""
+  );
   const {
     register,
     handleSubmit,
@@ -45,6 +52,7 @@ const AddLeavesModal = ({ open, setOpen, onSuccess }: AddLeavesModalProps) => {
   useEffect(() => {
     if (open) {
       loadLeaveTypes();
+      loadBackupOptions();
     }
   }, [open]);
 
@@ -66,6 +74,46 @@ const AddLeavesModal = ({ open, setOpen, onSuccess }: AddLeavesModalProps) => {
     }
   };
 
+  const loadBackupOptions = async () => {
+    setLoadingBackupOptions(true);
+    try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        toast.error("Unauthorized! Please login again.");
+        return;
+      }
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const res = await fetch(`${apiUrl}/dropdowns/user/emails/`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      if (!res.ok) {
+        throw new Error("Failed to fetch backup person options");
+      }
+      const data = await res.json();
+
+      // Handle array of email strings
+      const emailArray = Array.isArray(data) ? data : [];
+      const options = emailArray
+        .map((email: string, index: number) => {
+          if (typeof email === "string" && email.includes("@")) {
+            return { id: index + 1, email };
+          }
+          return null;
+        })
+        .filter(Boolean) as { id: number; email: string }[];
+      setBackupOptions(options);
+    } catch (error: any) {
+      console.error("Error fetching backup options:", error);
+      toast.error(error?.message || "Failed to load backup options");
+    } finally {
+      setLoadingBackupOptions(false);
+    }
+  };
+
   // Handle added leave
   const onSubmit = async (data: IEmployeeLeave) => {
     if (!selectedLeaveType || selectedLeaveType === "") {
@@ -80,11 +128,18 @@ const AddLeavesModal = ({ open, setOpen, onSuccess }: AddLeavesModalProps) => {
 
     setIsSubmitting(true);
     try {
+      const selectedBackupEmail =
+        selectedBackupPerson === ""
+          ? null
+          : backupOptions.find((o) => o.id === Number(selectedBackupPerson))
+              ?.email || null;
+
       const payload = {
         leave_type: Number(selectedLeaveType),
         start_date: selectStartDate.toISOString().split("T")[0],
         end_date: selectEndDate.toISOString().split("T")[0],
         reason: data.reason,
+        backup_person: selectedBackupEmail,
       };
 
       await createLeaveApplication(payload);
@@ -171,6 +226,56 @@ const AddLeavesModal = ({ open, setOpen, onSuccess }: AddLeavesModalProps) => {
                       </div>
                     </div>
 
+                    <div className="col-span-12 md:col-span-6">
+                      <div className="from__input-box select-wrapper">
+                        <div className="form__input-title">
+                          <label htmlFor="backupPerson" className="form-label">
+                            Backup person
+                          </label>
+                        </div>
+                        <div className="mz-default-select">
+                          <FormControl fullWidth>
+                            <Select
+                              id="backupPerson"
+                              value={selectedBackupPerson}
+                              onChange={(e) =>
+                                setSelectedBackupPerson(
+                                  e.target.value as number | ""
+                                )
+                              }
+                              displayEmpty
+                              disabled={loadingBackupOptions}
+                              renderValue={(selected) => {
+                                if (selected === "") {
+                                  return loadingBackupOptions
+                                    ? "Loading..."
+                                    : "Select Backup Person";
+                                }
+                                const sel = backupOptions.find(
+                                  (o) => o.id === selected
+                                );
+                                return sel?.email || selected;
+                              }}
+                              MenuProps={{
+                                disableScrollLock: true,
+                              }}
+                            >
+                              {backupOptions.length > 0 ? (
+                                backupOptions.map((opt) => (
+                                  <MenuItem key={opt.id} value={opt.id}>
+                                    {opt.email}
+                                  </MenuItem>
+                                ))
+                              ) : (
+                                <MenuItem disabled>
+                                  No options available
+                                </MenuItem>
+                              )}
+                            </Select>
+                          </FormControl>
+                        </div>
+                      </div>
+                    </div>
                     <div className="col-span-12 md:col-span-6">
                       <FormLabel label="Start Date" id="selectStartDate" />
                       <div className="datepicker-style">

@@ -15,6 +15,7 @@ interface InputFieldProps {
   defaultValue?: string | number;
   placeholder?: string;
   disabled?: boolean;
+  step?: number | string;
 }
 
 const InputField: React.FC<InputFieldProps> = ({
@@ -28,8 +29,9 @@ const InputField: React.FC<InputFieldProps> = ({
   groupInput = false,
   isTextArea = false,
   defaultValue = "",
-  placeholder,
+  placeholder = "",
   disabled = false,
+  step,
 }) => {
   return (
     <div className="form__input-box">
@@ -50,6 +52,8 @@ const InputField: React.FC<InputFieldProps> = ({
                     type={type}
                     defaultValue={defaultValue} // Set the default value
                     disabled={disabled}
+                    placeholder={placeholder}
+                    step={step}
                     {...(register ? register : {})}
                   />
                 </div>
@@ -69,6 +73,8 @@ const InputField: React.FC<InputFieldProps> = ({
                     type={type}
                     defaultValue={defaultValue} // Set the default value
                     disabled={disabled}
+                    placeholder={placeholder}
+                    step={step}
                     {...(register ? register : {})}
                   />
                 </div>
@@ -87,6 +93,7 @@ const InputField: React.FC<InputFieldProps> = ({
                 id={id}
                 className={`form-control ${error ? "is-invalid" : ""}`}
                 defaultValue={defaultValue} // Set the default value
+                placeholder={placeholder}
                 {...(register ? register : {})}
               ></textarea>
             </div>
