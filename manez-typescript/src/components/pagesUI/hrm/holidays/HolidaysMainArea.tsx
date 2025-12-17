@@ -1,13 +1,18 @@
 "use client";
 import Link from "next/link";
 import React, { useState } from "react";
-import DesignationsTable from "../designations/DesignationsTable";
-import AddNewDesignationModal from "../designations/AddNewDesignationModal";
 import HolidayTable from "./HolidayTable";
 import AddNewHoliday from "./AddNewHoliday";
 
 const HolidaysMainArea = () => {
   const [modalOpen, setModalOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Function to handle successful holiday creation/update
+  const handleHolidaySuccess = () => {
+    setRefreshKey(prev => prev + 1); // Increment to trigger refresh
+  };
+
   return (
     <>
       <div className="app__slide-wrapper">
@@ -33,9 +38,20 @@ const HolidaysMainArea = () => {
           </div>
         </div>
         {/* table */}
-        <HolidayTable />
+        <HolidayTable key={`holiday-table-${refreshKey}`} />
 
-        {modalOpen && <AddNewHoliday open={modalOpen} setOpen={setModalOpen} />}
+        {modalOpen && (
+          <AddNewHoliday 
+            open={modalOpen} 
+            setOpen={(isOpen) => {
+              setModalOpen(isOpen);
+              // Refresh table when modal closes after successful operation
+              if (!isOpen) {
+                handleHolidaySuccess();
+              }
+            }} 
+          />
+        )}
       </div>
     </>
   );
