@@ -1,13 +1,7 @@
-import { IAdminAttendance } from "@/interface/table.interface";
 import {
   IAttendanceRecordApiResponse,
-  IAttendancePaginatedResponse,
   IAttendanceForm
 } from "@/interface/attendance.interface";
-import { 
-  mapAttendanceResponseToTableRecords,
-  mapAttendanceRecordsToTableRecords
-} from "./attendanceMappingService";
 
 // Define interface for attendance record based on API documentation
 // DEPRECATED: Use IAttendanceRecordApiResponse instead
