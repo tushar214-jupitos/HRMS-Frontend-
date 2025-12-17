@@ -35,6 +35,7 @@ const sidebarData: SidebarCategory[] = [
           { label: "Employee leaves", link: "/hrm/leaves-employee" },
           { label: "Admin leaves", link: "/hrm/leaves" },
           { label: "Leave Approval", link: "/hrm/approval-dashboard" },
+          { label: "Leave Settings", link: "/hrm/leave-settings" },
           { label: "Holidays", link: "/hrm/holidays" },
           { label: "Time Sheet", link: "/hrm/timesheet" },
           { label: "Schedule", link: "/hrm/schedule" },
