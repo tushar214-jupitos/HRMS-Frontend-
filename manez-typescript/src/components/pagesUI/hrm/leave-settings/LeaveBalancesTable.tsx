@@ -89,14 +89,22 @@ const LeaveBalancesTable = ({ refreshTrigger }: LeaveBalancesTableProps) => {
     setIsLoading(true);
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await axios.get(
-        `${API_BASE_URL}/leave-settings/balance/my-balances/`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const userDataStr = localStorage.getItem("user");
+      const userData = userDataStr ? JSON.parse(userDataStr) : null;
+      const userRole = userData?.role?.id;
+
+      // Determine API endpoint based on user role
+      const endpoint =
+        userRole === "admin"
+          ? `/leave-settings/balance/`
+          : `/leave-settings/balance/my-balances/`;
+
+      const response = await axios.get(`${API_BASE_URL}${endpoint}`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       const data = response.data;
       const balances = Array.isArray(data)

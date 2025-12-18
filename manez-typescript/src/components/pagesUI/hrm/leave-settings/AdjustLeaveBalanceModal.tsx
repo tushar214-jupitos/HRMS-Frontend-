@@ -137,7 +137,7 @@ const AdjustLeaveBalanceModal: React.FC<AdjustLeaveBalanceModalProps> = ({
 
           {/* New Balance Input */}
           <div className="mb-3">
-            <FormLabel label="New Balance" required />
+            <FormLabel label="New Balance" id="newBalance" />
             <Controller
               name="balance"
               control={control}
