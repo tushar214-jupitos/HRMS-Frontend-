@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { fetchTodaysCheckIns, ITodaysCheckInsReport } from "@/services/attendanceService";
+import {  ITodaysCheckInsReport } from "@/services/attendanceService";
 import { toast } from "sonner";
 
 const TodaysCheckInsReport = () => {
@@ -12,8 +12,8 @@ const TodaysCheckInsReport = () => {
     const loadReport = async () => {
       try {
         setLoading(true);
-        const data = await fetchTodaysCheckIns();
-        setReport(data);
+       // const data = await fetchTodaysCheckIns();
+        //setReport(data);
         setError(null);
       } catch (err) {
         console.error("Failed to fetch today's check-ins report:", err);
