@@ -15,6 +15,7 @@ import useMaterialTableHook, { RowObject } from "@/hooks/useMaterialTableHook";
 import { toast } from "sonner";
 import axios from "axios";
 import DeleteModal from "@/components/common/DeleteModal";
+import EditLeaveTypeModal from "./EditLeaveTypeModal";
 import TableControls from "@/components/elements/SharedInputs/TableControls";
 
 interface LeaveType extends RowObject {
@@ -77,6 +78,8 @@ const LeaveTypesTable = ({ refreshTrigger }: LeaveTypesTableProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<number>(0);
   const [modalDeleteOpen, setModalDeleteOpen] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [modalEditOpen, setModalEditOpen] = useState(false);
 
   const {
     order,
@@ -140,6 +143,16 @@ const LeaveTypesTable = ({ refreshTrigger }: LeaveTypesTableProps) => {
       console.error("Error deleting leave type:", error);
       toast.error(error?.message || "Failed to delete leave type");
     }
+  };
+
+  const handleEditLeaveType = (id: number) => {
+    setEditId(id);
+    setModalEditOpen(true);
+  };
+
+  const handleEditSuccess = () => {
+    loadLeaveTypes();
+    setModalEditOpen(false);
   };
 
   const startEntry = filteredRows.length ? (page - 1) * rowsPerPage + 1 : 0;
@@ -304,16 +317,27 @@ const LeaveTypesTable = ({ refreshTrigger }: LeaveTypesTableProps) => {
                               </span>
                             </TableCell>
                             <TableCell className="table__icon-box text-headingPrimary">
-                              <button
-                                type="button"
-                                className="removeBtn table__icon delete"
-                                onClick={() => {
-                                  setDeleteId(row.id);
-                                  setModalDeleteOpen(true);
-                                }}
-                              >
-                                <i className="fa-regular fa-trash"></i>
-                              </button>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  className="table__icon edit"
+                                  onClick={() => handleEditLeaveType(row.id)}
+                                  title="Edit"
+                                >
+                                  <i className="fa-sharp fa-light fa-pen"></i>
+                                </button>
+                                <button
+                                  type="button"
+                                  className="removeBtn table__icon delete"
+                                  onClick={() => {
+                                    setDeleteId(row.id);
+                                    setModalDeleteOpen(true);
+                                  }}
+                                  title="Delete"
+                                >
+                                  <i className="fa-regular fa-trash"></i>
+                                </button>
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))
@@ -352,6 +376,15 @@ const LeaveTypesTable = ({ refreshTrigger }: LeaveTypesTableProps) => {
           setOpen={setModalDeleteOpen}
           handleDeleteFunc={() => handleDeleteLeaveType(deleteId)}
           deleteId={deleteId}
+        />
+      )}
+
+      {editId !== null && (
+        <EditLeaveTypeModal
+          open={modalEditOpen}
+          setOpen={setModalEditOpen}
+          leaveTypeId={editId}
+          onSuccess={handleEditSuccess}
         />
       )}
     </>

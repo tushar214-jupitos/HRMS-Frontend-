@@ -22,9 +22,21 @@ export default function ApprovalDashboardPage() {
       try {
         const data = await fetchTeamLeaveApplications();
         if (!active) return;
-        setRequests(
-          Array.isArray(data) ? data.filter((r) => r.status === "pending") : []
-        );
+
+        // Handle both direct array and paginated response formats
+        let applications: ILeaveApplicationAPI[] = [];
+        if (Array.isArray(data)) {
+          applications = data;
+        } else if (
+          data &&
+          typeof data === "object" &&
+          "results" in data &&
+          Array.isArray((data as any).results)
+        ) {
+          applications = (data as any).results;
+        }
+
+        setRequests(applications.filter((r) => r.status === "pending"));
       } catch (e: any) {
         if (!active) return;
         setError(e?.message || "Failed to load pending requests");
@@ -123,6 +135,18 @@ export default function ApprovalDashboardPage() {
                   scope="col"
                   className="px-4 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
                 >
+                  Backup Person
+                </th>
+                <th
+                  scope="col"
+                  className="px-4 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                >
+                  Status
+                </th>
+                <th
+                  scope="col"
+                  className="px-4 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                >
                   Action
                 </th>
               </tr>
@@ -131,7 +155,7 @@ export default function ApprovalDashboardPage() {
               {loading ? (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={9}
                     className="px-4 sm:px-6 py-8 text-center text-gray-500"
                   >
                     Loading pending requests...
@@ -140,7 +164,7 @@ export default function ApprovalDashboardPage() {
               ) : error ? (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={9}
                     className="px-4 sm:px-6 py-8 text-center text-red-500"
                   >
                     {error}
@@ -149,7 +173,7 @@ export default function ApprovalDashboardPage() {
               ) : requests.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={9}
                     className="px-4 sm:px-6 py-8 text-center text-gray-500"
                   >
                     No pending requests
@@ -180,6 +204,28 @@ export default function ApprovalDashboardPage() {
                       {r.leave_days}
                     </td>
                     <td className="px-4 sm:px-6 py-3">{r.reason}</td>
+                    <td className="px-4 sm:px-6 py-3 whitespace-nowrap">
+                      {r.backup_person ? (
+                        <div className="text-sm">
+                          <div className="font-medium">
+                            {r.backup_person.full_name ||
+                              `${r.backup_person.first_name || ""} ${
+                                r.backup_person.last_name || ""
+                              }`}
+                          </div>
+                          <div className="text-gray-500 dark:text-gray-400">
+                            {r.backup_person.designation}
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </td>
+                    <td className="px-4 sm:px-6 py-3 whitespace-nowrap">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
+                        {r.status}
+                      </span>
+                    </td>
                     <td className="px-4 sm:px-6 py-3">
                       <div className="flex items-center gap-2">
                         <button

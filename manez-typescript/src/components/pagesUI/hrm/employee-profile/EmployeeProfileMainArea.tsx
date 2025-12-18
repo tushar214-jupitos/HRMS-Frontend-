@@ -26,12 +26,26 @@ const EmployeeProfileMainArea = ({ id }: idType) => {
         const base =
           process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") || "";
         const token = localStorage.getItem("accessToken");
+        const userStr = localStorage.getItem("user");
+        const currentUser = userStr ? JSON.parse(userStr) : null;
+
         //  sessionStorage.getItem("accessToken");
         if (!base) {
           throw new Error("API base URL is not configured");
         }
 
-        const endpoint = `${base}/employee/${id}/`;
+        // Prefer the route id; fall back to logged-in user's employee/id if missing
+        const paramId = Number(id);
+        const currentUserId = currentUser?.employee_id ?? currentUser?.id;
+        const targetEmployeeId = Number.isFinite(paramId)
+          ? paramId
+          : Number(currentUserId);
+
+        if (!Number.isFinite(targetEmployeeId)) {
+          throw new Error("Employee id is not available for current user");
+        }
+
+        const endpoint = `${base}/employee/${targetEmployeeId}/`;
         const response = await fetch(endpoint, {
           headers: {
             "Content-Type": "application/json",

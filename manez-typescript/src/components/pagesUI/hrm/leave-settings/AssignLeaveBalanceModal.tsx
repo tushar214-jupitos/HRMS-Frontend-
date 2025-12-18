@@ -13,6 +13,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import { statePropsType } from "@/interface/common.interface";
 import FormLabel from "@/components/elements/SharedInputs/FormLabel";
+import InputField from "@/components/elements/SharedInputs/InputField";
 
 interface AssignLeaveBalanceModalProps extends statePropsType {
   onSuccess?: () => void;
@@ -46,11 +47,20 @@ const AssignLeaveBalanceModal: React.FC<AssignLeaveBalanceModalProps> = ({
   const [assignMode, setAssignMode] = useState<"single" | "all">("single");
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
+  const [loadingLeaveTypes, setLoadingLeaveTypes] = useState(false);
+  const [assignAllEmployee, setAssignAllEmployee] = useState<string | number>(
+    ""
+  );
+  const [assignAllYear, setAssignAllYear] = useState<number>(
+    new Date().getFullYear()
+  );
 
   const {
     control,
     handleSubmit,
     reset,
+    register,
     formState: { errors },
   } = useForm<LeaveBalanceFormData>({
     defaultValues: {
@@ -66,6 +76,47 @@ const AssignLeaveBalanceModal: React.FC<AssignLeaveBalanceModalProps> = ({
   const handleToggle = () => {
     setOpen(!open);
     reset();
+    setAssignAllEmployee("");
+    setAssignAllYear(new Date().getFullYear());
+  };
+
+  // Helper function to parse dropdown data
+  const parseDropdownData = (data: any, fieldName: string = ""): any[] => {
+    console.log(`Parsing ${fieldName}:`, typeof data, data);
+
+    // Handle case where data is wrapped in an object with results or data property
+    let items = data;
+
+    if (!Array.isArray(data)) {
+      // Check for various wrapper patterns
+      if (data?.results && Array.isArray(data.results)) {
+        items = data.results;
+      } else if (data?.data && Array.isArray(data.data)) {
+        items = data.data;
+      } else if (typeof data === "object" && data !== null) {
+        // If data is an object, try to extract values from it
+        const possibleArrays = Object.values(data).find((val) =>
+          Array.isArray(val)
+        );
+        if (possibleArrays) {
+          items = possibleArrays;
+        } else {
+          console.warn(`${fieldName}: Could not find array in response`, data);
+          return [];
+        }
+      } else {
+        console.warn(`${fieldName}: Invalid data type`, typeof data);
+        return [];
+      }
+    }
+
+    if (!Array.isArray(items) || items.length === 0) {
+      console.warn(`${fieldName}: No items to parse`, items);
+      return [];
+    }
+
+    console.log(`${fieldName} parsed result:`, items);
+    return items;
   };
 
   useEffect(() => {
@@ -76,41 +127,119 @@ const AssignLeaveBalanceModal: React.FC<AssignLeaveBalanceModalProps> = ({
   }, [open]);
 
   const fetchEmployees = async () => {
+    setLoadingEmployees(true);
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await axios.get(`${API_BASE_URL}/employees/employee/`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get(
+        `${API_BASE_URL}/dropdowns/employee/official-emails/`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
 
       const data = response.data;
-      const normalizedEmployees = Array.isArray(data)
-        ? data
-        : Array.isArray(data?.results)
-        ? data.results
-        : Array.isArray(data?.data)
-        ? data.data
-        : [];
+      console.log("Raw employee data:", data);
 
+      const parsedData = parseDropdownData(data, "Employees");
+
+      // Map the parsed data to Employee interface
+      const normalizedEmployees: Employee[] = parsedData.map(
+        (item: any, index: number) => {
+          // Handle string items (just emails)
+          if (typeof item === "string") {
+            return {
+              id: index + 1,
+              name: item,
+              emp_id: "",
+            };
+          }
+
+          // Handle object items
+          const id = item.id || item.user_id || item.employee_id || index + 1;
+          const name =
+            item.name ||
+            item.full_name ||
+            item.display_name ||
+            item.email ||
+            item.official_email ||
+            `Employee ${id}`;
+          const empId =
+            item.emp_id || item.employee_id || item.employee_code || "";
+
+          return {
+            id: id,
+            name: name,
+            emp_id: empId,
+          };
+        }
+      );
+
+      console.log("Normalized employees:", normalizedEmployees);
       setEmployees(normalizedEmployees);
     } catch (err) {
       console.error("Error fetching employees:", err);
+      toast.error("Failed to load employees");
       setEmployees([]);
+    } finally {
+      setLoadingEmployees(false);
     }
   };
 
   const fetchLeaveTypes = async () => {
+    setLoadingLeaveTypes(true);
     try {
       const token = localStorage.getItem("accessToken");
       const response = await axios.get(
-        `${API_BASE_URL}/leave-settings/types/`,
+        `${API_BASE_URL}/dropdowns/leave/types/`,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
         }
       );
+
       const data = response.data;
-      setLeaveTypes(Array.isArray(data) ? data : data.results || []);
+      console.log("Raw leave types data:", data);
+
+      const parsedData = parseDropdownData(data, "Leave Types");
+
+      // Map the parsed data to LeaveType interface
+      const normalizedLeaveTypes: LeaveType[] = parsedData.map(
+        (item: any, index: number) => {
+          // Handle string items
+          if (typeof item === "string") {
+            return {
+              id: index + 1,
+              name: item,
+              code: "",
+            };
+          }
+
+          // Handle object items
+          return {
+            id: item.id || index + 1,
+            name:
+              item.name ||
+              item.leave_type ||
+              item.type ||
+              `Leave Type ${item.id || index + 1}`,
+            code: item.code || item.leave_code || item.type_code || "",
+          };
+        }
+      );
+
+      console.log("Normalized leave types:", normalizedLeaveTypes);
+      setLeaveTypes(normalizedLeaveTypes);
     } catch (err) {
       console.error("Error fetching leave types:", err);
+      toast.error("Failed to load leave types");
+      setLeaveTypes([]);
+    } finally {
+      setLoadingLeaveTypes(false);
     }
   };
 
@@ -151,13 +280,7 @@ const AssignLeaveBalanceModal: React.FC<AssignLeaveBalanceModalProps> = ({
   };
 
   const onSubmitAll = async () => {
-    const employeeId = (
-      document.getElementById("employee-all") as HTMLSelectElement
-    )?.value;
-    const year = (document.getElementById("year-all") as HTMLInputElement)
-      ?.value;
-
-    if (!employeeId) {
+    if (!assignAllEmployee) {
       toast.error("Please select an employee");
       return;
     }
@@ -170,8 +293,8 @@ const AssignLeaveBalanceModal: React.FC<AssignLeaveBalanceModalProps> = ({
       await axios.post(
         `${API_BASE_URL}/leave-settings/balance/assign-all-to-employee/`,
         {
-          employee: parseInt(employeeId),
-          year: parseInt(year),
+          employee: parseInt(assignAllEmployee.toString()),
+          year: parseInt(assignAllYear.toString()),
         },
         {
           headers: {
@@ -242,117 +365,161 @@ const AssignLeaveBalanceModal: React.FC<AssignLeaveBalanceModalProps> = ({
         {/* Single Assignment Form */}
         {assignMode === "single" && (
           <form onSubmit={handleSubmit(onSubmitSingle)}>
-            <div className="row">
-              <div className="col-md-6 mb-3">
-                <FormLabel label="Employee" required />
-                <Controller
-                  name="employee"
-                  control={control}
-                  rules={{ required: "Employee is required" }}
-                  render={({ field }) => (
-                    <FormControl fullWidth>
-                      <Select {...field} displayEmpty>
-                        <MenuItem value="">Select Employee</MenuItem>
-                        {employees.map((emp) => (
-                          <MenuItem key={emp.id} value={emp.id}>
-                            {emp.name} ({emp.emp_id})
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  )}
-                />
-                {errors.employee && (
-                  <div className="text-danger small mt-1">
-                    {errors.employee.message}
-                  </div>
-                )}
-              </div>
+            <div className="grid grid-cols-12">
+              <div className="col-span-12">
+                <div className="card__wrapper mb-20">
+                  <div className="grid grid-cols-12 gap-x-5 gap-y-5 maxXs:gap-x-0">
+                    <div className="col-span-12 md:col-span-6">
+                      <FormLabel label="Employee" id="employee" />
+                      <div className="from__input-box select-wrapper">
+                        <div className="mz-default-select">
+                          <Controller
+                            name="employee"
+                            control={control}
+                            rules={{ required: "Employee is required" }}
+                            render={({ field }) => (
+                              <FormControl fullWidth>
+                                <Select
+                                  {...field}
+                                  displayEmpty
+                                  disabled={loadingEmployees || loading}
+                                  renderValue={(selected) => {
+                                    if (!selected) {
+                                      return loadingEmployees
+                                        ? "Loading..."
+                                        : "Select Employee";
+                                    }
+                                    const emp = employees.find(
+                                      (e) => e.id === selected
+                                    );
+                                    if (!emp) return selected;
+                                    return emp.emp_id
+                                      ? `${emp.name} (${emp.emp_id})`
+                                      : emp.name;
+                                  }}
+                                  MenuProps={{ disableScrollLock: true }}
+                                >
+                                  {employees.length === 0 ? (
+                                    <MenuItem disabled>
+                                      {loadingEmployees
+                                        ? "Loading..."
+                                        : "No employees found"}
+                                    </MenuItem>
+                                  ) : (
+                                    employees.map((emp) => (
+                                      <MenuItem key={emp.id} value={emp.id}>
+                                        {emp.emp_id
+                                          ? `${emp.name} (${emp.emp_id})`
+                                          : emp.name}
+                                      </MenuItem>
+                                    ))
+                                  )}
+                                </Select>
+                              </FormControl>
+                            )}
+                          />
+                        </div>
+                      </div>
+                      {errors.employee && (
+                        <div className="text-danger small mt-1">
+                          {errors.employee.message}
+                        </div>
+                      )}
+                    </div>
 
-              <div className="col-md-6 mb-3">
-                <FormLabel label="Leave Type" required />
-                <Controller
-                  name="leave_type"
-                  control={control}
-                  rules={{ required: "Leave type is required" }}
-                  render={({ field }) => (
-                    <FormControl fullWidth>
-                      <Select {...field} displayEmpty>
-                        <MenuItem value="">Select Leave Type</MenuItem>
-                        {leaveTypes.map((type) => (
-                          <MenuItem key={type.id} value={type.id}>
-                            {type.name} ({type.code})
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  )}
-                />
-                {errors.leave_type && (
-                  <div className="text-danger small mt-1">
-                    {errors.leave_type.message}
-                  </div>
-                )}
-              </div>
+                    <div className="col-span-12 md:col-span-6">
+                      <FormLabel label="Leave Type" id="leaveType" />
+                      <div className="from__input-box select-wrapper">
+                        <div className="mz-default-select">
+                          <Controller
+                            name="leave_type"
+                            control={control}
+                            rules={{ required: "Leave type is required" }}
+                            render={({ field }) => (
+                              <FormControl fullWidth>
+                                <Select
+                                  {...field}
+                                  displayEmpty
+                                  disabled={loadingLeaveTypes || loading}
+                                  renderValue={(selected) => {
+                                    if (!selected) {
+                                      return loadingLeaveTypes
+                                        ? "Loading..."
+                                        : "Select Leave Type";
+                                    }
+                                    const type = leaveTypes.find(
+                                      (t) => t.id === selected
+                                    );
+                                    if (!type) return selected;
+                                    return type.code
+                                      ? `${type.name} (${type.code})`
+                                      : type.name;
+                                  }}
+                                  MenuProps={{ disableScrollLock: true }}
+                                >
+                                  {leaveTypes.length === 0 ? (
+                                    <MenuItem disabled>
+                                      {loadingLeaveTypes
+                                        ? "Loading..."
+                                        : "No leave types found"}
+                                    </MenuItem>
+                                  ) : (
+                                    leaveTypes.map((type) => (
+                                      <MenuItem key={type.id} value={type.id}>
+                                        {type.code
+                                          ? `${type.name} (${type.code})`
+                                          : type.name}
+                                      </MenuItem>
+                                    ))
+                                  )}
+                                </Select>
+                              </FormControl>
+                            )}
+                          />
+                        </div>
+                      </div>
+                      {errors.leave_type && (
+                        <div className="text-danger small mt-1">
+                          {errors.leave_type.message}
+                        </div>
+                      )}
+                    </div>
 
-              <div className="col-md-6 mb-3">
-                <FormLabel label="Balance" required />
-                <Controller
-                  name="balance"
-                  control={control}
-                  rules={{
-                    required: "Balance is required",
-                    min: { value: 0, message: "Must be 0 or greater" },
-                  }}
-                  render={({ field }) => (
-                    <input
-                      {...field}
-                      type="number"
-                      step="0.5"
-                      className="form-control"
-                      placeholder="e.g., 15"
-                    />
-                  )}
-                />
-                {errors.balance && (
-                  <div className="text-danger small mt-1">
-                    {errors.balance.message}
-                  </div>
-                )}
-              </div>
+                    <div className="col-span-12 md:col-span-6">
+                      <InputField
+                        label="Balance"
+                        id="balance"
+                        type="number"
+                        step={0.5}
+                        placeholder="e.g., 15"
+                        register={register("balance", {
+                          required: "Balance is required",
+                          min: { value: 0, message: "Must be 0 or greater" },
+                          valueAsNumber: true,
+                        })}
+                        error={errors.balance}
+                      />
+                    </div>
 
-              <div className="col-md-6 mb-3">
-                <FormLabel label="Year" required />
-                <Controller
-                  name="year"
-                  control={control}
-                  rules={{ required: "Year is required" }}
-                  render={({ field }) => (
-                    <input
-                      {...field}
-                      type="number"
-                      className="form-control"
-                      placeholder="e.g., 2025"
-                    />
-                  )}
-                />
-                {errors.year && (
-                  <div className="text-danger small mt-1">
-                    {errors.year.message}
+                    <div className="col-span-12 md:col-span-6">
+                      <InputField
+                        label="Year"
+                        id="year"
+                        type="number"
+                        placeholder="e.g., 2025"
+                        register={register("year", {
+                          required: "Year is required",
+                          valueAsNumber: true,
+                        })}
+                        error={errors.year}
+                      />
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
             </div>
 
-            <div className="modal__footer justify-content-end">
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={handleToggle}
-                disabled={loading}
-              >
-                Cancel
-              </button>
+            <div className="submit__btn text-center">
               <button
                 type="submit"
                 className="btn btn-primary"
@@ -375,25 +542,63 @@ const AssignLeaveBalanceModal: React.FC<AssignLeaveBalanceModalProps> = ({
 
             <div className="row">
               <div className="col-md-6 mb-3">
-                <FormLabel label="Employee" required />
-                <select id="employee-all" className="form-select">
-                  <option value="">Select Employee</option>
-                  {employees.map((emp) => (
-                    <option key={emp.id} value={emp.id}>
-                      {emp.name} ({emp.emp_id})
-                    </option>
-                  ))}
-                </select>
+                <FormLabel label="Employee" id="employeeAll" />
+                <div className="from__input-box select-wrapper">
+                  <div className="mz-default-select">
+                    <FormControl fullWidth>
+                      <Select
+                        id="employee-all"
+                        value={assignAllEmployee}
+                        onChange={(e) => setAssignAllEmployee(e.target.value)}
+                        displayEmpty
+                        disabled={loadingEmployees || loading}
+                        renderValue={(selected) => {
+                          if (!selected) {
+                            return loadingEmployees
+                              ? "Loading..."
+                              : "Select Employee";
+                          }
+                          const emp = employees.find(
+                            (item) => item.id === selected
+                          );
+                          if (!emp) return selected as any;
+                          return emp.emp_id
+                            ? `${emp.name} (${emp.emp_id})`
+                            : emp.name;
+                        }}
+                        MenuProps={{ disableScrollLock: true }}
+                      >
+                        {employees.length === 0 ? (
+                          <MenuItem disabled>
+                            {loadingEmployees
+                              ? "Loading..."
+                              : "No employees found"}
+                          </MenuItem>
+                        ) : (
+                          employees.map((emp) => (
+                            <MenuItem key={emp.id} value={emp.id}>
+                              {emp.emp_id
+                                ? `${emp.name} (${emp.emp_id})`
+                                : emp.name}
+                            </MenuItem>
+                          ))
+                        )}
+                      </Select>
+                    </FormControl>
+                  </div>
+                </div>
               </div>
 
               <div className="col-md-6 mb-3">
-                <FormLabel label="Year" required />
+                <FormLabel label="Year" id="yearAll" />
                 <input
                   id="year-all"
                   type="number"
                   className="form-control"
-                  defaultValue={new Date().getFullYear()}
                   placeholder="e.g., 2025"
+                  value={assignAllYear}
+                  onChange={(e) => setAssignAllYear(Number(e.target.value))}
+                  disabled={loading}
                 />
               </div>
             </div>

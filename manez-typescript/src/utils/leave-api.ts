@@ -81,7 +81,7 @@ export const fetchTeamLeaveApplications =
   async (): Promise<ILeaveApplicationAPI[]> => {
     try {
       const response = await fetch(
-        `${API_BASE_URL}/leave/leave-applications/team-applications/`,
+        `${API_BASE_URL}/leave/leave-applications/`,
         {
           method: "GET",
           headers: getAuthHeaders(),
@@ -216,7 +216,7 @@ export const managerApproveLeave = async (
     const response = await fetch(
       `${API_BASE_URL}/leave/leave-applications/${id}/manager-approve/`,
       {
-        method: "POST",
+        method: "PATCH",
         headers: getAuthHeaders(),
         body: JSON.stringify(data || {}),
       }
@@ -270,7 +270,7 @@ export const rejectLeave = async (
     const response = await fetch(
       `${API_BASE_URL}/leave/leave-applications/${id}/reject/`,
       {
-        method: "POST",
+        method: "PATCH",
         headers: getAuthHeaders(),
         body: JSON.stringify(data),
       }
